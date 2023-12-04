@@ -4,7 +4,7 @@ import List from './List';
 import styled from 'styled-components';
 
 const VideoPlayer = () => {
-    const [videoId, setVideoId] = useState('8YB-zGeNfD4');
+    const [videoId, setVideoId] = useState('O-ZGDdieJU8');
     const [videoURL, setVideoURL] = useState('');
     const [videoList, setVideoList] = useState([]);
     const originalWidth = 640;
@@ -45,9 +45,12 @@ const VideoPlayer = () => {
     }, []);
 
     const addToList = () => {
-        const updatedList = [...videoList, { id: videoId }];
-        setVideoList(updatedList);
-        localStorage.setItem("videoList", JSON.stringify(updatedList));
+        const index = videoList.findIndex(obj => obj.id === videoId);
+        if (index === -1) {
+            const updatedList = [...videoList, { id: videoId }];
+            setVideoList(updatedList);
+            localStorage.setItem("videoList", JSON.stringify(updatedList));
+        }
     };
     const changeVideo = (id) => {
         setVideoURL('')
