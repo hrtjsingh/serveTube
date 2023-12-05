@@ -28,7 +28,6 @@ const VideoPlayer = () => {
         return match ? match[1] : '';
     };
 
-
     const opts = {
         height: newHeight,
         width: newWidth,
@@ -75,17 +74,15 @@ const VideoPlayer = () => {
                 <Button type="submit">Play</Button>
             </FormElement>
             <PlayerContainer>
-                <div>
+                <PlayerSec>
                     {videoId &&
-                        <ResponsivePlayer>
-                            <YouTube
-                                videoId={videoId}
-                                opts={opts}
-                                onEnd={playNext}
-                            />
-                        </ResponsivePlayer>}
+                        <YouTube
+                            videoId={videoId}
+                            opts={opts}
+                            onEnd={playNext}
+                        />}
                     <AddToListButton onClick={addToList}>Add To List</AddToListButton>
-                </div>
+                </PlayerSec>
                 {videoList.length > 0 && <ListContainer>
                     <List videoList={videoList} changeVideo={changeVideo} />
                 </ListContainer>}
@@ -113,14 +110,11 @@ const Input = styled.input`
     height:50px;
     width: 100%;
     max-width: 400px;
-    padding:0 35px;
+    padding-left: 35px;
     border-radius: 20px;
     margin: 0 20px;
     &:focus-visible {
         outline: none;
-    }
-    @media (max-width: 980px) {
-        padding:0 10px;
     }
 `;
 
@@ -170,23 +164,17 @@ const PlayerContainer = styled.div`
         flex-direction: column;
     }
 `;
-const ResponsivePlayer = styled.div`
-    position: relative;
-    padding-top: 56.25%; /* 16:9 aspect ratio */
-    width: 100%;
 
-    @media (min-width: 768px) {
-        flex: 1;
-    }
-
-    iframe {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-    }
-`;
 const ListContainer = styled.div`
     margin: 0 10px;
+`;
+
+const PlayerSec = styled.div`
+    flex:1;
+    @media (max-width: 980px) {
+        iframe{
+        height: 200px;
+        width: 330px;
+    }
+    }
 `
