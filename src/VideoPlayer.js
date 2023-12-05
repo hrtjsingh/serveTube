@@ -177,7 +177,6 @@ const ResponsivePlayer = styled.div`
 
     @media (min-width: 768px) {
         flex: 1;
-        padding-top: 0;
     }
 
     iframe {
