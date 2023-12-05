@@ -12,8 +12,8 @@ function App() {
 
   return (
     <AppConatiner className="App">
-      <img src={Logo} height={100} width={400} />
-      <p>Enjoy Ad Free YouTube videos</p>
+      <LogoImg src={Logo} alt='logo' />
+      <SubTitle>Enjoy Ad Free YouTube videos</SubTitle>
       <VideoPlayer />
     </AppConatiner>
   );
@@ -28,4 +28,19 @@ const AppConatiner = styled.div`
   background-color: #121212;
   margin: 0 40px;
   padding: 20px 60px;
+  @media (max-width: 968px) {
+    padding: 0;
+    }
+`;
+
+const LogoImg = styled.img`
+  height: 100px;
+  width: 400px;
+  @media (max-width: 968px) {
+    width: 300px;
+    }
+`;
+
+const SubTitle = styled.p`
+  margin-top: 0;
 `

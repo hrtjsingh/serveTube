@@ -23,10 +23,11 @@ const VideoPlayer = () => {
     };
 
     const extractVideoId = (link) => {
-        const regExp = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})$/;
+        const regExp = /^(?:(?:https?:)?\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/ \r\n]{11})/;
         const match = link.match(regExp);
         return match ? match[1] : '';
     };
+
 
     const opts = {
         height: newHeight,
@@ -75,11 +76,14 @@ const VideoPlayer = () => {
             </FormElement>
             <PlayerContainer>
                 <div>
-                    {videoId && <YouTube
-                        videoId={videoId}
-                        opts={opts}
-                        onEnd={playNext}
-                    />}
+                    {videoId &&
+                        <ResponsivePlayer>
+                            <YouTube
+                                videoId={videoId}
+                                opts={opts}
+                                onEnd={playNext}
+                            />
+                        </ResponsivePlayer>}
                     <AddToListButton onClick={addToList}>Add To List</AddToListButton>
                 </div>
                 {videoList.length > 0 && <ListContainer>
@@ -109,11 +113,14 @@ const Input = styled.input`
     height:50px;
     width: 100%;
     max-width: 400px;
-    padding-left: 35px;
+    padding:0 35px;
     border-radius: 20px;
     margin: 0 20px;
     &:focus-visible {
         outline: none;
+    }
+    @media (max-width: 980px) {
+        padding:0 10px;
     }
 `;
 
@@ -159,8 +166,28 @@ const AddToListButton = styled.button`
 const PlayerContainer = styled.div`
     display: flex;
     gap: 20px;
+    @media (max-width: 980px) {
+        flex-direction: column;
+    }
 `;
+const ResponsivePlayer = styled.div`
+    position: relative;
+    padding-top: 56.25%; /* 16:9 aspect ratio */
+    width: 100%;
 
+    @media (min-width: 768px) {
+        flex: 1;
+        padding-top: 0;
+    }
+
+    iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+`;
 const ListContainer = styled.div`
     margin: 0 10px;
 `

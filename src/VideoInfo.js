@@ -50,4 +50,7 @@ const VideoInfoMain = styled.div`
     & img{
         margin-right: 20px;
     }
+    @media (max-width: 968px) {
+        margin: 20px 0;
+    }
 `
