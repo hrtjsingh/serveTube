@@ -4,7 +4,7 @@ import List from './List';
 import styled from 'styled-components';
 
 const VideoPlayer = () => {
-    const [videoId, setVideoId] = useState('O-ZGDdieJU8');
+    const [videoId, setVideoId] = useState('SxTYjptEzZs');
     const [videoURL, setVideoURL] = useState('');
     const [videoList, setVideoList] = useState([]);
     const originalWidth = 640;
