@@ -8,7 +8,7 @@ function App() {
     if (!localStorage.getItem("videoList")) {
       localStorage.setItem("videoList", "[]")
     }
-  },)
+  },[])
 
   return (
     <AppConatiner className="App">
