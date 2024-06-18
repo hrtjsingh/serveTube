@@ -30,6 +30,7 @@ const AppConatiner = styled.div`
   padding: 20px 60px;
   @media (max-width: 968px) {
     padding: 0;
+    margin: 0 10px;
     }
 `;
 
