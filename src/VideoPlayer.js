@@ -4,7 +4,7 @@ import List from './List';
 import styled from 'styled-components';
 
 const VideoPlayer = () => {
-    const [videoId, setVideoId] = useState('SxTYjptEzZs');
+    const [videoId, setVideoId] = useState('s-4Fe83fwtM');
     const [videoURL, setVideoURL] = useState('');
     const [videoList, setVideoList] = useState([]);
     const originalWidth = 640;
@@ -18,7 +18,7 @@ const VideoPlayer = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         const videoIdFromLink = extractVideoId(videoURL);
-       setVideoURL("");
+        setVideoURL("");
         setVideoId(videoIdFromLink);
     };
 
@@ -52,6 +52,11 @@ const VideoPlayer = () => {
             localStorage.setItem("videoList", JSON.stringify(updatedList));
         }
     };
+    const deleteFromList = (id) => {
+        const updatedList = videoList.filter((item) => item.id !== id);
+        setVideoList(updatedList);
+        localStorage.setItem("videoList", JSON.stringify(updatedList));
+    };
     const changeVideo = (id) => {
         setVideoURL('')
         setVideoId(id)
@@ -84,7 +89,7 @@ const VideoPlayer = () => {
                     <AddToListButton onClick={addToList}>Add To List</AddToListButton>
                 </PlayerSec>
                 {videoList.length > 0 && <ListContainer>
-                    <List videoList={videoList} changeVideo={changeVideo} />
+                    <List videoList={videoList} changeVideo={changeVideo} deleteVideo={deleteFromList} />
                 </ListContainer>}
             </PlayerContainer>
         </MainContainer>
