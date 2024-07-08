@@ -53,6 +53,7 @@ const VideoPlayer = () => {
             localStorage.setItem("videoList", JSON.stringify(updatedList));
         }
     };
+
     const deleteFromList = (id) => {
         const updatedList = videoList.filter((item) => item.id !== id);
         setVideoList(updatedList);
@@ -66,8 +67,12 @@ const VideoPlayer = () => {
         const index = videoList.findIndex(obj => obj.id === videoId);
         if (index !== -1 && index < videoList.length - 1) {
             setVideoId(videoList[index + 1].id)
+        } else if (index !== -1 && index === videoList.length - 1) {
+            setVideoId(videoList[0].id)
         }
     }
+
+
     return (
         <MainContainer>
             <FormElement onSubmit={handleSubmit}>
@@ -77,8 +82,9 @@ const VideoPlayer = () => {
                     value={videoURL}
                     onChange={handleChange}
                 />
-                <Button type="submit"><FaPlay />
-                    Play</Button>
+                <Button type="submit" disabled={videoURL.length === 0}>
+                    <FaPlay />Play
+                </Button>
             </FormElement>
             <PlayerContainer>
                 <PlayerSec>
@@ -88,12 +94,10 @@ const VideoPlayer = () => {
                             opts={opts}
                             onEnd={playNext}
                         />}
-                    <AddToListButton onClick={addToList}>
-                        <FaPlus />
-                        Add To List</AddToListButton>
+                    <AddToListButton onClick={addToList} disabled={videoList.findIndex(obj => obj.id === videoId) === 1}><FaPlus /> Add To List</AddToListButton>
                 </PlayerSec>
                 {videoList.length > 0 && <ListContainer>
-                    <List videoList={videoList} changeVideo={changeVideo} deleteVideo={deleteFromList} />
+                    <List videoList={videoList} changeVideo={changeVideo} deleteVideo={deleteFromList} playingVideo={videoId} />
                 </ListContainer>}
             </PlayerContainer>
         </MainContainer>
@@ -168,6 +172,10 @@ const AddToListButton = styled.button`
 
     &:focus {
         outline: none;
+    }
+    &:disabled{
+        background-color: #78a78ba8;
+        cursor: not-allowed;
     }
 `;
 

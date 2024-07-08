@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { SlOptionsVertical } from "react-icons/sl";
 import useClickOutside from './useClickOutside';
 
-const VideoInfo = ({ id, changeVideo, deleteVideo }) => {
+const VideoInfo = ({ id, changeVideo, deleteVideo, playingVideo }) => {
     const [videoInfo, setVideoInfo] = useState(null);
     const [showOptions, setShowOptions] = useState(false);
     const [error, setError] = useState(null);
@@ -32,13 +32,13 @@ const VideoInfo = ({ id, changeVideo, deleteVideo }) => {
         <div>
             {error && <p>{error}</p>}
             {videoInfo && (
-                <VideoInfoMain>
+                <VideoInfoMain style={{ borderColor: playingVideo ? "#0080006e" : "transparent" }}>
                     <TitleContainer onClick={() => { changeVideo(id) }}>
                         <img src={videoInfo.thumbnails.default.url} alt="Thumbnail" />
                         <h5>{videoInfo.title}</h5>
                     </TitleContainer>
                     <OptionContainer>
-                        <SlOptionsVertical size="23px" onClick={() => { setShowOptions(!showOptions) }} />
+                        <SlOptionsVertical size="16px" onClick={() => { setShowOptions(!showOptions) }} />
                         {showOptions && <Options ref={ref}>
                             <OptionList>
                                 <span onClick={() => { deleteVideo(id) }}>Remove</span>
@@ -61,6 +61,8 @@ const VideoInfoMain = styled.div`
     max-width: 480px;
     border: 1px solid #232323d6;
     padding: 5px;
+    gap: 10px;
+    border-radius: 5px;
     cursor: pointer;
     &:hover{
         background-color:#161616 ;
