@@ -174,7 +174,7 @@ const PlayerSec = styled.div`
     @media (max-width: 980px) {
         iframe{
         height: 200px;
-        width: 330px;
+        width: 100%;
     }
     }
 `
