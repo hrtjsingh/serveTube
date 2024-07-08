@@ -18,7 +18,7 @@ const VideoPlayer = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         const videoIdFromLink = extractVideoId(videoURL);
-        console.log(videoIdFromLink)
+       setVideoURL("");
         setVideoId(videoIdFromLink);
     };
 
