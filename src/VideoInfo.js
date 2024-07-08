@@ -3,8 +3,8 @@ import axios from 'axios';
 import styled from 'styled-components';
 import { SlOptionsVertical } from "react-icons/sl";
 import useClickOutside from './useClickOutside';
-
-const VideoInfo = ({ id, changeVideo, deleteVideo, playingVideo }) => {
+import { FaPlay } from "react-icons/fa";
+const VideoInfo = ({ id, index, changeVideo, deleteVideo, playingVideo }) => {
     const [videoInfo, setVideoInfo] = useState(null);
     const [showOptions, setShowOptions] = useState(false);
     const [error, setError] = useState(null);
@@ -32,7 +32,8 @@ const VideoInfo = ({ id, changeVideo, deleteVideo, playingVideo }) => {
         <div>
             {error && <p>{error}</p>}
             {videoInfo && (
-                <VideoInfoMain style={{ borderColor: playingVideo ? "#0080006e" : "transparent" }}>
+                <VideoInfoMain>
+                    <span>{playingVideo ? <FaPlay size="16px" /> : index + 1}</span>
                     <TitleContainer onClick={() => { changeVideo(id) }}>
                         <img src={videoInfo.thumbnails.default.url} alt="Thumbnail" />
                         <h5>{videoInfo.title}</h5>
@@ -59,9 +60,9 @@ const VideoInfoMain = styled.div`
     align-items: center;
     margin: 20px;
     max-width: 480px;
-    border: 1px solid #232323d6;
+    /* border: 1px solid #232323d6; */
     padding: 5px;
-    gap: 10px;
+    gap: 20px;
     border-radius: 5px;
     cursor: pointer;
     &:hover{

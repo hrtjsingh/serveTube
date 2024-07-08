@@ -5,8 +5,8 @@ import styled from 'styled-components'
 const List = ({ videoList, changeVideo, deleteVideo, playingVideo }) => {
     return (
         <ListContainer>
-            {videoList.length > 0 && videoList.map(item => (
-                <VideoInfo key={item.id} changeVideo={changeVideo} id={item.id} deleteVideo={deleteVideo} playingVideo={item.id === playingVideo} />
+            {videoList.length > 0 && videoList.map((item, index) => (
+                <VideoInfo key={item.id} changeVideo={changeVideo} index={index} id={item.id} deleteVideo={deleteVideo} playingVideo={item.id === playingVideo} />
             ))}
         </ListContainer>
     )
