@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
 import { SlOptionsVertical } from "react-icons/sl";
+import useClickOutside from './useClickOutside';
 
 const VideoInfo = ({ id, changeVideo, deleteVideo }) => {
     const [videoInfo, setVideoInfo] = useState(null);
     const [showOptions, setShowOptions] = useState(false);
     const [error, setError] = useState(null);
     const key = process.env.REACT_APP_API_KEY
-
+    const ref = useClickOutside(() => setShowOptions(false));
     const getData = async (e) => {
         try {
             const response = await axios.get(
@@ -38,9 +39,9 @@ const VideoInfo = ({ id, changeVideo, deleteVideo }) => {
                     </TitleContainer>
                     <OptionContainer>
                         <SlOptionsVertical size="23px" onClick={() => { setShowOptions(!showOptions) }} />
-                        {showOptions && <Options>
+                        {showOptions && <Options ref={ref}>
                             <OptionList>
-                                <span onClick={() => { deleteVideo(id) }}>Delete</span>
+                                <span onClick={() => { deleteVideo(id) }}>Remove</span>
                             </OptionList>
                         </Options>}
                     </OptionContainer>
@@ -58,7 +59,12 @@ const VideoInfoMain = styled.div`
     align-items: center;
     margin: 20px;
     max-width: 480px;
+    border: 1px solid #232323d6;
+    padding: 5px;
     cursor: pointer;
+    &:hover{
+        background-color:#161616 ;
+    }
 `;
 
 const TitleContainer = styled.div`
@@ -90,6 +96,9 @@ const Options = styled.div`
     background-color: aliceblue;
     color: black;
     border-radius: 5px;
+    &:hover{
+        background-color: #a7b0b8;
+    }
 `;
 
 const OptionList = styled.div`

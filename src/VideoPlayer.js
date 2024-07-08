@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import YouTube from 'react-youtube';
 import List from './List';
 import styled from 'styled-components';
+import { FaPlus, FaPlay } from "react-icons/fa";
 
 const VideoPlayer = () => {
     const [videoId, setVideoId] = useState('s-4Fe83fwtM');
@@ -76,7 +77,8 @@ const VideoPlayer = () => {
                     value={videoURL}
                     onChange={handleChange}
                 />
-                <Button type="submit">Play</Button>
+                <Button type="submit"><FaPlay />
+                    Play</Button>
             </FormElement>
             <PlayerContainer>
                 <PlayerSec>
@@ -86,7 +88,9 @@ const VideoPlayer = () => {
                             opts={opts}
                             onEnd={playNext}
                         />}
-                    <AddToListButton onClick={addToList}>Add To List</AddToListButton>
+                    <AddToListButton onClick={addToList}>
+                        <FaPlus />
+                        Add To List</AddToListButton>
                 </PlayerSec>
                 {videoList.length > 0 && <ListContainer>
                     <List videoList={videoList} changeVideo={changeVideo} deleteVideo={deleteFromList} />
@@ -124,9 +128,11 @@ const Input = styled.input`
 `;
 
 const Button = styled.button`
-  /* Define your styles here */
     padding: 10px 20px;
     font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap:4px;
     background-color: #3498db;
     color: #ffffff;
     border: none;
@@ -147,6 +153,9 @@ const AddToListButton = styled.button`
     margin-top: 20px;
     font-size: 16px;
     float: inline-end;
+    display: flex;
+    align-items: center;
+    gap: 4px;
     background-color: #27ae60;
     color: #ffffff;
     border: none;
