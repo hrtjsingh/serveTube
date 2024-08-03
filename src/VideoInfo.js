@@ -72,6 +72,8 @@ const VideoInfoMain = styled.div`
 
 const TitleContainer = styled.div`
     display: flex;
+    justify-content: center;
+    align-items: center;
     max-width: 450px;
     cursor: pointer;
     & img{
