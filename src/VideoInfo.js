@@ -79,7 +79,15 @@ const TitleContainer = styled.div`
     }
     @media (max-width: 968px) {
         margin: 20px 0;
+         & img{
+         height:80px;
+         width:80px;
+        }
+        & h5{
+        font-size:10px;
+        }
     }
+    
 `;
 
 const OptionContainer = styled.div`
