@@ -68,6 +68,13 @@ const VideoInfoMain = styled.div`
     &:hover{
         background-color:#161616 ;
     }
+     @media (max-width: 968px) {
+         margin: 5px;
+         &:hover{
+        background-color:none ;
+    }
+     }
+     
 `;
 
 const TitleContainer = styled.div`
