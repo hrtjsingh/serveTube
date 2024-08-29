@@ -83,12 +83,12 @@ const VideoPlayer = () => {
                     placeholder="Enter YouTube video link"
                     value={videoURL}
                     onChange={handleChange}
-                    className="w-full sm:w-2/3 p-3 rounded-md bg-black text-white border border-gray-700 focus:outline-none focus:border-purple-500"
+                    className="w-full text-sm md:text-md sm:w-2/3 p-3 rounded-md bg-black text-white border border-gray-700 focus:outline-none focus:border-purple-500"
                 />
                 <Button
                     type="submit"
                     disabled={videoURL.length === 0}
-                    className="w-full sm:w-auto px-6 py-3 bg-purple-600 text-white rounded-md flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-[50%] sm:w-auto px-5 py-1 bg-purple-600 text-white rounded-md flex items-center justify-center gap-1.5 hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <FaPlay className="text-sm" />
                     <span>Play</span>
@@ -122,7 +122,7 @@ const VideoPlayer = () => {
                     </AddToListButton>
                 </PlayerSec>
                 {videoList.length > 0 && (
-                    <div className='mx-3 sm:mx-4 md:mx-5 lg:mx-6'>
+                    <div className='mx-3 sm:mx-4 md:mx-5 lg:mx-6 mt-6 md:mt-0'>
                         <Card className='mb-4 overflow-visible w-full max-w-full sm:max-w-[480px] md:max-w-[640px] lg:max-w-[800px] xl:max-w-[960px]'>
                             <List
                                 videoList={videoList}
