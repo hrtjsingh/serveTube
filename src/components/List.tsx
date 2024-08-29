@@ -2,10 +2,10 @@ import React from 'react'
 import VideoInfo from './VideoInfo'
 import styled from 'styled-components'
 
-const List = ({ videoList, changeVideo, deleteVideo, playingVideo }) => {
+const List = ({ videoList, changeVideo, deleteVideo, playingVideo }: any) => {
     return (
         <ListContainer>
-            {videoList.length > 0 && videoList.map((item, index) => (
+            {videoList.length > 0 && videoList.map((item: any, index: number) => (
                 <VideoInfo key={item.id} changeVideo={changeVideo} index={index} id={item.id} deleteVideo={deleteVideo} playingVideo={item.id === playingVideo} />
             ))}
         </ListContainer>

@@ -1,29 +1,31 @@
+'use client'
 import React, { useEffect, useState } from 'react';
 import YouTube from 'react-youtube';
 import List from './List';
 import styled from 'styled-components';
 import { FaPlus, FaPlay } from "react-icons/fa";
+import { Card } from './ui/card';
 
 const VideoPlayer = () => {
-    const [videoId, setVideoId] = useState('s-4Fe83fwtM');
-    const [videoURL, setVideoURL] = useState('');
-    const [videoList, setVideoList] = useState([]);
+    const [videoId, setVideoId] = useState<any>('s-4Fe83fwtM');
+    const [videoURL, setVideoURL] = useState<any>('');
+    const [videoList, setVideoList] = useState<any>([]);
     const originalWidth = 640;
     const originalHeight = 390;
     const newWidth = 800;
     const newHeight = Math.round((newWidth / originalWidth) * originalHeight);
-    const handleChange = (e) => {
+    const handleChange = (e: any) => {
         setVideoURL(e.target.value);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: any) => {
         e.preventDefault();
         const videoIdFromLink = extractVideoId(videoURL);
         setVideoURL("");
         setVideoId(videoIdFromLink);
     };
 
-    const extractVideoId = (link) => {
+    const extractVideoId = (link: any) => {
         const regExp = /^(?:(?:https?:)?\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/ \r\n]{11})/;
         const match = link.match(regExp);
         return match ? match[1] : '';
@@ -46,7 +48,7 @@ const VideoPlayer = () => {
     }, []);
 
     const addToList = () => {
-        const index = videoList.findIndex(obj => obj.id === videoId);
+        const index = videoList.findIndex((obj: any) => obj.id === videoId);
         if (index === -1) {
             const updatedList = [...videoList, { id: videoId }];
             setVideoList(updatedList);
@@ -54,53 +56,86 @@ const VideoPlayer = () => {
         }
     };
 
-    const deleteFromList = (id) => {
-        const updatedList = videoList.filter((item) => item.id !== id);
+    const deleteFromList = (id: any) => {
+        const updatedList = videoList.filter((item: any) => item.id !== id);
         setVideoList(updatedList);
         localStorage.setItem("videoList", JSON.stringify(updatedList));
     };
-    const changeVideo = (id) => {
+    const changeVideo = (id: any) => {
         setVideoURL('')
         setVideoId(id)
     }
     const playNext = () => {
-        const index = videoList.findIndex(obj => obj.id === videoId);
+        const index = videoList.findIndex((obj: any) => obj.id === videoId);
         if (index !== -1 && index < videoList.length - 1) {
-            setVideoId(videoList[index + 1].id)
+            setVideoId(videoList[index + 1]?.id)
         } else if (index !== -1 && index === videoList.length - 1) {
-            setVideoId(videoList[0].id)
+            setVideoId(videoList[0]?.id)
         }
     }
 
 
     return (
         <MainContainer>
-            <FormElement onSubmit={handleSubmit}>
+            <FormElement onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-3xl mx-auto">
                 <Input
                     type="text"
                     placeholder="Enter YouTube video link"
                     value={videoURL}
                     onChange={handleChange}
+                    className="w-full sm:w-2/3 p-3 rounded-md bg-black text-white border border-gray-700 focus:outline-none focus:border-purple-500"
                 />
-                <Button type="submit" disabled={videoURL.length === 0}>
-                    <FaPlay />Play
+                <Button
+                    type="submit"
+                    disabled={videoURL.length === 0}
+                    className="w-full sm:w-auto px-6 py-3 bg-purple-600 text-white rounded-md flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <FaPlay className="text-sm" />
+                    <span>Play</span>
                 </Button>
             </FormElement>
             <PlayerContainer>
                 <PlayerSec>
                     {videoId &&
-                        <YouTube
-                            videoId={videoId}
-                            opts={opts}
-                            onEnd={playNext}
-                        />}
-                    <AddToListButton onClick={addToList} disabled={videoList.findIndex(obj => obj.id === videoId) === 1}><FaPlus /> Add To List</AddToListButton>
+                        <Card className='p-0 border-none'>
+                            <div className="relative">
+                                <div className="absolute -inset-2 rounded-lg bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-600 via-neutral-600 to-purple-600 opacity-50 blur-2xl"
+                                ></div>
+                                <div className="relative w-full h-full border-none border-zinc-700 rounded-lg bg-zinc-900 text-slate-300 sm:w-[480px] md:w-[640px] lg:w-[800px] xl:w-full">
+                                    <YouTube
+                                        className='rounded-md'
+                                        videoId={videoId}
+                                        opts={opts}
+                                        onEnd={playNext}
+                                    />
+                                </div>
+                            </div>
+                        </Card>
+                    }
+                    <AddToListButton
+                        onClick={addToList}
+                        disabled={videoList.findIndex((obj: any) => obj.id === videoId) === 1}
+                        className="w-full sm:w-auto mt-4 px-4 py-2 text-sm sm:text-base flex items-center justify-center gap-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <FaPlus className="text-sm" />
+                        <span>Add To List</span>
+                    </AddToListButton>
                 </PlayerSec>
-                {videoList.length > 0 && <ListContainer>
-                    <List videoList={videoList} changeVideo={changeVideo} deleteVideo={deleteFromList} playingVideo={videoId} />
-                </ListContainer>}
+                {videoList.length > 0 && (
+                    <div className='mx-3 sm:mx-4 md:mx-5 lg:mx-6'>
+                        <Card className='mb-4 overflow-visible w-full max-w-full sm:max-w-[480px] md:max-w-[640px] lg:max-w-[800px] xl:max-w-[960px]'>
+                            <List
+                                videoList={videoList}
+                                changeVideo={changeVideo}
+                                deleteVideo={deleteFromList}
+                                playingVideo={videoId}
+                                className='w-full'
+                            />
+                        </Card>
+                    </div>
+                )}
             </PlayerContainer>
-        </MainContainer>
+        </MainContainer >
     );
 };
 
@@ -113,7 +148,7 @@ const FormElement = styled.form`
     display:flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 40px;
+    margin-bottom: 60px;
 `;
 
 const Input = styled.input`
