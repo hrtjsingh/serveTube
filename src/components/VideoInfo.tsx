@@ -39,10 +39,10 @@ const VideoInfo = ({ id, index, changeVideo, deleteVideo, playingVideo }: any) =
             {videoInfo && (
                 <CardContent className='p-2 '>
                     <div className='flex items-center p-2 gap-2 w-full rounded-md relative hover:bg-slate-500 transition-colors duration-300 ease-in-out'>
-                        <span className='w-10 text-sm'>{playingVideo ? <FaPlay className='text-sm md:text-md' /> : index + 1}</span>
+                        <span className='w-10 text-sm text-center'>{playingVideo ? <FaPlay className='text-sm md:text-md' /> : index + 1}</span>
                         <div className='flex items-center flex-row md:w-[400px] gap-2 md:gap-4 cursor-pointer' onClick={() => { changeVideo(id) }}>
-                            <img src={videoInfo?.thumbnails?.default?.url} alt="Thumbnail" className='w-[65px] md:w-full' />
-                            <h5 className='space-x-5 text-xs'>{videoInfo?.title?.split(' ').slice(0, 10).join(' ')}{videoInfo?.title?.split(' ').length > 10 ? '...' : ''}</h5>
+                            <img src={videoInfo?.thumbnails?.default?.url} alt="Thumbnail" className='w-[65px] md:w-[120px]' />
+                            <h5 className='space-x-5 text-xs md:text-base'>{videoInfo?.title?.split(' ').slice(0, 10).join(' ')}{videoInfo?.title?.split(' ').length > 10 ? '...' : ''}</h5>
                         </div>
                         <div className='user-select-none relative '>
                             <SlOptionsVertical className='cursor-pointer' size="16px" onClick={() => { setShowOptions(!showOptions) }} />
