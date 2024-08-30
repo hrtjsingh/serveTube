@@ -74,7 +74,6 @@ const VideoPlayer = () => {
         }
     }
 
-
     return (
         <MainContainer>
             <FormElement onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-3xl mx-auto">
@@ -99,9 +98,8 @@ const VideoPlayer = () => {
                     {videoId &&
                         <Card className='p-0 border-none'>
                             <div className="relative">
-                                <div className="absolute -inset-2 rounded-lg bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-600 via-neutral-600 to-purple-600 opacity-50 blur-2xl"
-                                ></div>
-                                <div className="relative w-full h-full border-none border-zinc-700 rounded-lg bg-zinc-900 text-slate-300 sm:w-[480px] md:w-[640px] lg:w-[800px] xl:w-full">
+                                <div className="absolute -inset-2 rounded-lg opacity-50 blur-2xl animate-gradient"></div>
+                                <div className="relative flex w-full h-full items-center justify-center border-none rounded-lg bg-zinc-900 text-slate-300">
                                     <YouTube
                                         className='rounded-md'
                                         videoId={videoId}
