@@ -82,7 +82,7 @@ const VideoPlayer = () => {
                     placeholder="Enter YouTube video link"
                     value={videoURL}
                     onChange={handleChange}
-                    className="w-full text-sm md:text-md sm:w-2/3 p-3 rounded-md bg-black text-white border border-gray-700 focus:outline-none focus:border-purple-500"
+                    className="w-full text-sm md:text-md sm:w-2/3 p-3 rounded-md bg-gray-900 text-white border border-gray-700 focus:outline-none focus:border-purple-500 shadow-md"
                 />
                 <Button
                     type="submit"
@@ -150,7 +150,7 @@ const FormElement = styled.form`
 `;
 
 const Input = styled.input`
-    background-color: black;
+    /* background-color: black; */
     color: #ffff;
     border: none;
     height:50px;
