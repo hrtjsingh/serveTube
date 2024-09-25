@@ -9,7 +9,7 @@ import { Card } from './ui/card';
 const VideoPlayer = () => {
     const [videoId, setVideoId] = useState<any>('36AKk9A5gH8');
     const [videoURL, setVideoURL] = useState<any>('');
-    const [videoList, setVideoList] = useState<any>(["TqXxNkP93Z8"]);
+    const [videoList, setVideoList] = useState<any>([{ id: 'TqXxNkP93Z8' }]);
     const originalWidth = 640;
     const originalHeight = 390;
     const newWidth = 800;
@@ -43,10 +43,10 @@ const VideoPlayer = () => {
         const list = localStorage.getItem("videoList");
         if (list) {
             const parsedList = JSON.parse(list);
-            setVideoList([...videoList,parsedList]);
+            setVideoList([...videoList, parsedList]);
         }
     }, []);
-
+    console.log(videoList)
     const addToList = () => {
         const index = videoList.findIndex((obj: any) => obj.id === videoId);
         if (index === -1) {
