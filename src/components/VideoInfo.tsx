@@ -33,6 +33,7 @@ const VideoInfo = ({ id, index, changeVideo, deleteVideo, playingVideo }: any) =
         getData()
     }, [id])
 
+    
     return (
         <>
             {error && <CardContent><p>{error}</p></CardContent>}
