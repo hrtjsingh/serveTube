@@ -7,7 +7,7 @@ import { FaPlus, FaPlay } from "react-icons/fa";
 import { Card } from './ui/card';
 
 const VideoPlayer = () => {
-    const [videoId, setVideoId] = useState<any>('s-4Fe83fwtM');
+    const [videoId, setVideoId] = useState<any>('36AKk9A5gH8');
     const [videoURL, setVideoURL] = useState<any>('');
     const [videoList, setVideoList] = useState<any>([]);
     const originalWidth = 640;
