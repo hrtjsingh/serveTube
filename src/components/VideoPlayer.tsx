@@ -43,7 +43,13 @@ const VideoPlayer = () => {
         const list = localStorage.getItem("videoList");
         if (list) {
             const parsedList = JSON.parse(list);
-            setVideoList([...videoList, ...parsedList]);
+       const combinedList = [...videoList, ...parsedList];        
+const uniqueList = combinedList.filter(
+            (item, index, self) =>
+                index === self.findIndex((v) => v.id === item.id)
+        );
+
+        setVideoList(uniqueList);
         }
     }, []);
     console.log(videoList)
