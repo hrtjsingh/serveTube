@@ -43,7 +43,7 @@ const VideoPlayer = () => {
         const list = localStorage.getItem("videoList");
         if (list) {
             const parsedList = JSON.parse(list);
-            setVideoList(parsedList);
+            setVideoList([...videoList,parsedList]);
         }
     }, []);
 
