@@ -9,6 +9,7 @@ import { MdDelete } from "react-icons/md";
 import useClickOutside from '@/utils/useClickOutside';
 import { Card, CardContent } from './ui/card';
 
+
 const VideoInfo = ({ id, index, changeVideo, deleteVideo, playingVideo }: any) => {
     const [videoInfo, setVideoInfo] = useState<any>(null);
     const [showOptions, setShowOptions] = useState(false);
