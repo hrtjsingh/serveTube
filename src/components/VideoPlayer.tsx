@@ -9,7 +9,7 @@ import { Card } from './ui/card';
 const VideoPlayer = () => {
     const [videoId, setVideoId] = useState<any>('36AKk9A5gH8');
     const [videoURL, setVideoURL] = useState<any>('');
-    const [videoList, setVideoList] = useState<any>([{ id: '36AKk9A5gH8' },{ id: 'TqXxNkP93Z8'}]);
+    const [videoList, setVideoList] = useState<any>([{ id: '36AKk9A5gH8' }, { id: 'TqXxNkP93Z8' }]);
     const originalWidth = 640;
     const originalHeight = 390;
     const newWidth = 800;
@@ -43,13 +43,13 @@ const VideoPlayer = () => {
         const list = localStorage.getItem("videoList");
         if (list) {
             const parsedList = JSON.parse(list);
-       const combinedList = [...videoList, ...parsedList];        
-const uniqueList = combinedList.filter(
-            (item, index, self) =>
-                index === self.findIndex((v) => v.id === item.id)
-        );
+            const combinedList = [...videoList, ...parsedList];
+            const uniqueList = combinedList.filter(
+                (item, index, self) =>
+                    index === self.findIndex((v) => v.id === item.id)
+            );
 
-        setVideoList(uniqueList);
+            setVideoList(uniqueList);
         }
     }, []);
     console.log(videoList)
@@ -130,6 +130,7 @@ const uniqueList = combinedList.filter(
                         <Card className='mb-4 overflow-visible w-full max-w-full sm:max-w-[480px] md:max-w-[640px] lg:max-w-[800px] xl:max-w-[960px]'>
                             <List
                                 videoList={videoList}
+                                setVideoList={setVideoList}
                                 changeVideo={changeVideo}
                                 deleteVideo={deleteFromList}
                                 playingVideo={videoId}
