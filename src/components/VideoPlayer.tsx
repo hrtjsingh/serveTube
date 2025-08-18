@@ -52,7 +52,6 @@ const VideoPlayer = () => {
             setVideoList(uniqueList);
         }
     }, []);
-    console.log(videoList)
     const addToList = () => {
         const index = videoList.findIndex((obj: any) => obj.id === videoId);
         if (index === -1) {

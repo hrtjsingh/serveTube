@@ -10,8 +10,9 @@ import useClickOutside from '@/utils/useClickOutside';
 import { Card, CardContent } from './ui/card';
 
 
-const VideoInfo = ({ id, index, changeVideo, deleteVideo, playingVideo }: any) => {
+const VideoInfo = ({ id, index, changeVideo, deleteVideo, playingVideo, dragHandleProps }: any) => {
     const [videoInfo, setVideoInfo] = useState<any>(null);
+
     const [showOptions, setShowOptions] = useState(false);
     const [error, setError] = useState("");
     const key = process.env.NEXT_PUBLIC_API_KEY
@@ -34,13 +35,13 @@ const VideoInfo = ({ id, index, changeVideo, deleteVideo, playingVideo }: any) =
         getData()
     }, [id])
 
-    
     return (
         <>
             {error && <CardContent><p>{error}</p></CardContent>}
             {videoInfo && (
-                <CardContent className='p-2 '>
+                <CardContent className='p-2 ' >
                     <div className='flex items-center p-2 gap-2 w-full rounded-md relative hover:bg-slate-500 transition-colors duration-300 ease-in-out'>
+                        <span {...dragHandleProps} className="cursor-grab px-2 select-none">☰</span>
                         <span className='w-10 text-sm text-center'>{playingVideo ? <FaPlay className='text-sm md:text-md' /> : index + 1}</span>
                         <div className='flex items-center flex-row md:w-[400px] gap-2 md:gap-4 cursor-pointer' onClick={() => { changeVideo(id) }}>
                             <img src={videoInfo?.thumbnails?.default?.url} alt="Thumbnail" className='w-[65px] md:w-[120px]' />

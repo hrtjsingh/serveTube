@@ -19,7 +19,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 
-import SortableVideoItem from './SortableVideoItem'; // We'll make this next
+import SortableVideoItem from './SortableVideoItem'; 
 
 const List = ({ videoList, changeVideo, deleteVideo, playingVideo, setVideoList }: any) => {
   const sensors = useSensors(

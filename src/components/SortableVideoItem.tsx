@@ -13,13 +13,14 @@ const SortableVideoItem = ({ id, index, changeVideo, deleteVideo, playingVideo }
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} >
       <VideoInfo
         id={id}
         index={index}
         changeVideo={changeVideo}
         deleteVideo={deleteVideo}
         playingVideo={playingVideo}
+         dragHandleProps={{ ...attributes, ...listeners }}
       />
     </div>
   );
