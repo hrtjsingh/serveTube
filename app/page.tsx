@@ -1,6 +1,6 @@
-import Image from "next/image";
+import VideoPlayer from "@/components/VideoPlayer";
+import Image from "next/image"
 import Logo from '../assets/logo.svg'
-import VideoPlayer from '@/components/VideoPlayer';
 export default function Home() {
   return (
     <div className="grid place-items-center text-white mx-2 my-0 p-5 md:pt-10 md:mx-2 md:p-0">
@@ -10,6 +10,3 @@ export default function Home() {
     </div>
   );
 }
-
-
-

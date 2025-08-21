@@ -1,19 +1,119 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import YouTube from 'react-youtube';
+import { useClerk } from "@clerk/nextjs";
 import List from './List';
 import styled from 'styled-components';
 import { FaPlus, FaPlay } from "react-icons/fa";
 import { Card } from './ui/card';
-
+import { useUser } from "@clerk/nextjs";
+import axios from 'axios';
 const VideoPlayer = () => {
+    const clerk = useClerk();
     const [videoId, setVideoId] = useState<any>('36AKk9A5gH8');
     const [videoURL, setVideoURL] = useState<any>('');
+    const [playlistId, setPlaylistId] = useState<any>('');
     const [videoList, setVideoList] = useState<any>([{ id: '36AKk9A5gH8' }, { id: 'TqXxNkP93Z8' }]);
     const originalWidth = 640;
     const originalHeight = 390;
     const newWidth = 800;
     const newHeight = Math.round((newWidth / originalWidth) * originalHeight);
+    const { isSignedIn, user } = useUser();
+
+    const checkUserInfo = async () => {
+        try {
+            const payload = {
+                googleId: user?.id,
+                name: user?.fullName,
+                email: user?.emailAddresses[0].emailAddress
+            }
+            const res = await axios.post("api/users/save", JSON.stringify(payload))
+
+            if (res.status == 200) {
+                const { user, type } = res.data
+                console.log(user, type)
+                if (type !== "user") {
+                    const payload = {
+                        userId: user._id,
+                        songs: [{ id: '36AKk9A5gH8' }, { id: 'TqXxNkP93Z8' }]
+                    }
+
+                    const playlistData = await axios.post("api/playlists/add", JSON.stringify(payload))
+
+                    if (playlistData.status === 200) {
+                        const list = playlistData.data.playlist.songs
+                        setVideoList(list)
+                        setPlaylistId(playlistData.data.playlist._id)
+                        setVideoId(list[0].id)
+                    }
+                } else {
+                    getUserPlaylist(user._id)
+                }
+            }
+        } catch (e) {
+            console.log(e)
+        }
+    }
+
+    const getUserPlaylist = async (userId: string) => {
+        try {
+            if (userId) {
+                const playlistData = await axios.get(`api/users/${userId}`)
+                if (playlistData.status === 200) {
+                    const list = playlistData.data.playlist.songs
+                    setVideoList(list)
+                }
+            }
+        } catch (e) {
+            console.log(e)
+        }
+    }
+
+    const addVideoToList = async () => {
+        try {
+            const payload = {
+                id: videoId
+            }
+            if (playlistId) {
+                const playlistData = await axios.post(`api/playlists/${playlistId}/add-song`, JSON.stringify(payload))
+                if (playlistData.status === 200) {
+                    const list = playlistData.data.playlist.songs
+                    setVideoList(list)
+                }
+            }
+        } catch (e) {
+            console.log(e)
+        }
+    }
+
+    const deleteVideoToList = async (videoId: string) => {
+        try {
+            const payload = {
+                id: videoId,
+            };
+
+            if (playlistId) {
+                const playlistData = await axios.delete(
+                    `/api/playlists/${playlistId}/delete-song`,
+                    { data: payload }
+                );
+
+                if (playlistData.status === 200) {
+                    const list = playlistData.data.playlist.songs;
+                    setVideoList(list);
+                }
+            }
+        } catch (e) {
+            console.error("Delete error:", e);
+        }
+    };
+
+    useEffect(() => {
+        if (isSignedIn) {
+            checkUserInfo()
+        }
+    }, [isSignedIn])
+
     const handleChange = (e: any) => {
         setVideoURL(e.target.value);
     };
@@ -40,38 +140,46 @@ const VideoPlayer = () => {
     };
 
     useEffect(() => {
-        const list = localStorage.getItem("videoList");
-        if (list) {
-            const parsedList = JSON.parse(list);
-            const combinedList = [...videoList, ...parsedList];
-            const uniqueList = combinedList.filter(
-                (item, index, self) =>
-                    index === self.findIndex((v) => v.id === item.id)
-            );
+        // const list = localStorage.getItem("videoList");
+        // if (list) {
+        //     const parsedList = JSON.parse(list);
+        //     const combinedList = [...videoList, ...parsedList];
+        //     const uniqueList = combinedList.filter(
+        //         (item, index, self) =>
+        //             index === self.findIndex((v) => v.id === item.id)
+        //     );
 
-            setVideoList(uniqueList);
-        }
+        //     setVideoList(uniqueList);
+        // }
     }, []);
+
     const addToList = () => {
-        const index = videoList.findIndex((obj: any) => obj.id === videoId);
+        if (!isSignedIn) {
+            clerk.openSignIn({})
+        }
+        const index = videoList?.findIndex((obj: any) => obj.id === videoId);
         if (index === -1) {
             const updatedList = [...videoList, { id: videoId }];
-            setVideoList(updatedList);
-            localStorage.setItem("videoList", JSON.stringify(updatedList));
+            // setVideoList(updatedList);
+            addVideoToList()
+            // localStorage.setItem("videoList", JSON.stringify(updatedList));
         }
     };
 
     const deleteFromList = (id: any) => {
-        const updatedList = videoList.filter((item: any) => item.id !== id);
-        setVideoList(updatedList);
-        localStorage.setItem("videoList", JSON.stringify(updatedList));
+        console.log(id)
+        const updatedList = videoList?.filter((item: any) => item.id !== id);
+        // setVideoList(updatedList);
+        deleteVideoToList(id)
+        // localStorage.setItem("videoList", JSON.stringify(updatedList));
     };
+
     const changeVideo = (id: any) => {
         setVideoURL('')
         setVideoId(id)
     }
     const playNext = () => {
-        const index = videoList.findIndex((obj: any) => obj.id === videoId);
+        const index = videoList?.findIndex((obj: any) => obj.id === videoId);
         if (index !== -1 && index < videoList.length - 1) {
             setVideoId(videoList[index + 1]?.id)
         } else if (index !== -1 && index === videoList.length - 1) {
@@ -117,14 +225,14 @@ const VideoPlayer = () => {
                     }
                     <AddToListButton
                         onClick={addToList}
-                        disabled={videoList.findIndex((obj: any) => obj.id === videoId) === 1}
+                        disabled={videoList?.findIndex((obj: any) => obj.id === videoId) === 1}
                         className="w-full sm:w-auto mt-4 px-4 py-2 text-sm sm:text-base flex items-center justify-center gap-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <FaPlus className="text-sm" />
                         <span>Add To List</span>
                     </AddToListButton>
                 </PlayerSec>
-                {videoList.length > 0 && (
+                {videoList?.length > 0 && (
                     <div className='mx-3 sm:mx-4 md:mx-5 lg:mx-6 mt-6 md:mt-0'>
                         <Card className='mb-4 overflow-visible w-full max-w-full sm:max-w-[480px] md:max-w-[640px] lg:max-w-[800px] xl:max-w-[960px]'>
                             <List

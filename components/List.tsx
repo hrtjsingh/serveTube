@@ -34,7 +34,7 @@ const List = ({ videoList, changeVideo, deleteVideo, playingVideo, setVideoList 
       const newIndex = videoList.findIndex((item: any) => item.id === over?.id);
       const newList = arrayMove(videoList, oldIndex, newIndex);
       setVideoList(newList);
-      localStorage.setItem('videoList', JSON.stringify(newList));
+      // localStorage.setItem('videoList', JSON.stringify(newList));
     }
   };
 
