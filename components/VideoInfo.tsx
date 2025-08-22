@@ -30,7 +30,10 @@ const VideoInfo = ({ id, index, changeVideo, deleteVideo, playingVideo, dragHand
             setVideoInfo(null);
         }
     };
-
+    const deleteVid = (id: string) => {
+        deleteVideo(id)
+        setShowOptions(false)
+    }
     useEffect(() => {
         getData()
     }, [id])
@@ -51,7 +54,7 @@ const VideoInfo = ({ id, index, changeVideo, deleteVideo, playingVideo, dragHand
                             <SlOptionsVertical className='cursor-pointer' size="16px" onClick={() => { setShowOptions(!showOptions) }} />
                             {showOptions && <div className="absolute flex items-center justify-center top-[120%] z-40 right-[-65%] p-2 font-semibold bg-[#f0f8ff] text-black rounded hover:bg-[#a7b0b8]" ref={ref as any}>
                                 <div className='cursor-pointer'>
-                                    <MdDelete className='cursor-pointer' color='red' size="20px" onClick={() => { deleteVideo(id) }} />
+                                    <MdDelete className='cursor-pointer' color='red' size="20px" onClick={() => { deleteVid(id) }} />
                                 </div>
                             </div>}
                         </div>

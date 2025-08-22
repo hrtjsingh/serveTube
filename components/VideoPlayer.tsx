@@ -153,16 +153,16 @@ const VideoPlayer = () => {
             autoplay: 1,
         },
     };
-    const sync = () => {
-        const list = localStorage.getItem("videoList");
-        if (list) {
-            const parsedList = JSON.parse(list);
-            console.log(parsedList)
-            parsedList.map((element: any) => {
-                addVideoToList(element.id)
-            });
-        }
-    }
+    // const sync = () => {
+    //     const list = localStorage.getItem("videoList");
+    //     if (list) {
+    //         const parsedList = JSON.parse(list);
+    //         console.log(parsedList)
+    //         parsedList.map((element: any) => {
+    //             addVideoToList(element.id)
+    //         });
+    //     }
+    // }
     useEffect(() => {
         // const list = localStorage.getItem("videoList");
         // if (list) {
@@ -269,7 +269,6 @@ const VideoPlayer = () => {
                     </div>
                 )}
             </PlayerContainer>
-            <button onClick={sync}>sync</button>
         </MainContainer >
     );
 };
