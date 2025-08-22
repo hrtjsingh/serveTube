@@ -159,7 +159,7 @@ const VideoPlayer = () => {
             const parsedList = JSON.parse(list);
             console.log(parsedList)
             parsedList.map((element: any) => {
-                videoId(element.id)
+                addVideoToList(element.id)
             });
         }
     }
