@@ -36,8 +36,7 @@ const VideoPlayer = () => {
             if (res.status == 200) {
                 const { user, type } = res.data
                 if (type !== "user") {
-                    getUserPlaylist(user._id)
-                    // createPlaylist(user._id)
+                    createPlaylist(user._id)
                 } else {
                     getUserPlaylist(user._id)
                 }
@@ -48,7 +47,7 @@ const VideoPlayer = () => {
     }
 
     const createPlaylist = async (userId: string) => {
-       
+
         const payload = {
             userId: userId,
             songs: [{ id: '36AKk9A5gH8' }, { id: 'TqXxNkP93Z8' }]
@@ -190,14 +189,14 @@ const VideoPlayer = () => {
         }
         const index = videoList?.findIndex((obj: any) => obj.id === videoId);
         if (index === -1) {
+            setVideoList([...videoList, { id: videoId }])
             addVideoToList(videoId)
         }
     };
 
     const deleteFromList = (id: any) => {
-        console.log(id)
         const updatedList = videoList?.filter((item: any) => item.id !== id);
-        // setVideoList(updatedList);
+        setVideoList(updatedList);
         deleteVideoToList(id)
         // localStorage.setItem("videoList", JSON.stringify(updatedList));
     };
