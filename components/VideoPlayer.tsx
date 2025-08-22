@@ -36,7 +36,8 @@ const VideoPlayer = () => {
             if (res.status == 200) {
                 const { user, type } = res.data
                 if (type !== "user") {
-                    createPlaylist(user._id)
+                    getUserPlaylist(user._id)
+                    // createPlaylist(user._id)
                 } else {
                     getUserPlaylist(user._id)
                 }
@@ -47,6 +48,7 @@ const VideoPlayer = () => {
     }
 
     const createPlaylist = async (userId: string) => {
+       
         const payload = {
             userId: userId,
             songs: [{ id: '36AKk9A5gH8' }, { id: 'TqXxNkP93Z8' }]
@@ -88,7 +90,6 @@ const VideoPlayer = () => {
             const payload = {
                 id: videoId
             }
-            console.log(playlistId, "playlistId")
             if (playlistId) {
                 const playlistData = await axios.post(`api/playlists/${playlistId}/add-song`, JSON.stringify(payload))
                 if (playlistData.status === 200) {
@@ -99,6 +100,12 @@ const VideoPlayer = () => {
         } catch (e) {
             console.log(e)
         }
+    }
+
+    const updateList = async (list: any) => {
+        await axios.post(`/api/playlists/${playlistId}/update`, {
+            songs: list
+        });
     }
 
     const deleteVideoToList = async (videoId: string) => {
@@ -263,6 +270,7 @@ const VideoPlayer = () => {
                                 changeVideo={changeVideo}
                                 deleteVideo={deleteFromList}
                                 playingVideo={videoId}
+                                updateList={updateList}
                                 className='w-full'
                             />
                         </Card>

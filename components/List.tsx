@@ -21,7 +21,7 @@ import {
 
 import SortableVideoItem from './SortableVideoItem'; 
 
-const List = ({ videoList, changeVideo, deleteVideo, playingVideo, setVideoList }: any) => {
+const List = ({ videoList, changeVideo, deleteVideo, playingVideo, setVideoList ,updateList}: any) => {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -34,6 +34,7 @@ const List = ({ videoList, changeVideo, deleteVideo, playingVideo, setVideoList 
       const newIndex = videoList.findIndex((item: any) => item.id === over?.id);
       const newList = arrayMove(videoList, oldIndex, newIndex);
       setVideoList(newList);
+      updateList(newList)
       // localStorage.setItem('videoList', JSON.stringify(newList));
     }
   };

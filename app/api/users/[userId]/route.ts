@@ -9,8 +9,8 @@ export async function GET(
   try {
     await connectDB();
 
-    const { userId } = await context.params;
-
+    // const { userId } = await context.params;
+    const userId = "68a88f642a8e27d83910bebf";
     console.log(userId, "userId from API");
 
     const playlist = await Playlist.find({ userId });
