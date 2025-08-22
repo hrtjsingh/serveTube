@@ -1,7 +1,7 @@
 import mongoose, { Schema, model, models } from "mongoose";
 
 const songSchema = new Schema({
-  id: { type: String, required: true, unique: true },
+  id: { type: String, required: true },
 });
 
 const PlaylistSchema = new Schema(
