@@ -32,7 +32,7 @@ export default function RootLayout({
         <Head>
           <link rel="icon" href="./favicon.ico" sizes="any" />
         </Head>
-        <body className={`${geistSans.variable} ${geistMono.variable} flex min-h-full flex-col antialiased`}>
+        <body className={`${geistSans.variable} ${geistMono.variable} bg-background flex min-h-full flex-col antialiased`}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <Header />
             {children}

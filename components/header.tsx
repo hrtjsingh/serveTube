@@ -1,7 +1,17 @@
+"use client"
 import { Button } from '@/components/ui/button'
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
+import { useUser, useClerk } from "@clerk/nextjs";
 export function Header() {
+  const { isSignedIn } = useUser();
+  const clerk = useClerk();
+  const signinHandler = () => {
+    if (!isSignedIn) {
+      clerk.openSignIn({})
+    }
+  }
+
   return (
     <header className="flex h-16 items-center justify-between gap-4 border-b px-4">
       <Link href="/" className="flex items-center gap-x-4">
@@ -9,9 +19,7 @@ export function Header() {
       </Link>
       <div className="flex items-center gap-x-4">
         <SignedOut>
-          <SignInButton>
-            <Button variant="ghost">Sign in</Button>
-          </SignInButton>
+          <Button variant="ghost" onClick={signinHandler}>Sign in</Button>
         </SignedOut>
         <SignedIn>
           <UserButton />

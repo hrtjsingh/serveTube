@@ -1,25 +1,29 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import YouTube from 'react-youtube';
-import { useClerk } from "@clerk/nextjs";
 import List from './List';
 import styled from 'styled-components';
 import { FaPlus, FaPlay } from "react-icons/fa";
 import { Card } from './ui/card';
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
 import axios from 'axios';
 const VideoPlayer = () => {
     const clerk = useClerk();
     const [videoId, setVideoId] = useState<any>('36AKk9A5gH8');
     const [videoURL, setVideoURL] = useState<any>('');
     const [playlistId, setPlaylistId] = useState<any>('');
-    const [videoList, setVideoList] = useState<any>([{ id: '36AKk9A5gH8' }, { id: 'TqXxNkP93Z8' }]);
+    const [videoList, setVideoList] = useState<any>([]);
     const originalWidth = 640;
     const originalHeight = 390;
     const newWidth = 800;
     const newHeight = Math.round((newWidth / originalWidth) * originalHeight);
-    const { isSignedIn, user } = useUser();
+    const { isSignedIn, user, isLoaded } = useUser();
 
+    useEffect(() => {
+        if (isLoaded && user === null) {
+            setVideoList([])
+        }
+    }, [isLoaded, user])
     const checkUserInfo = async () => {
         try {
             const payload = {
@@ -31,21 +35,8 @@ const VideoPlayer = () => {
 
             if (res.status == 200) {
                 const { user, type } = res.data
-                console.log(user, type)
                 if (type !== "user") {
-                    const payload = {
-                        userId: user._id,
-                        songs: [{ id: '36AKk9A5gH8' }, { id: 'TqXxNkP93Z8' }]
-                    }
-
-                    const playlistData = await axios.post("api/playlists/add", JSON.stringify(payload))
-
-                    if (playlistData.status === 200) {
-                        const list = playlistData.data.playlist.songs
-                        setVideoList(list)
-                        setPlaylistId(playlistData.data.playlist._id)
-                        setVideoId(list[0].id)
-                    }
+                    createPlaylist(user._id)
                 } else {
                     getUserPlaylist(user._id)
                 }
@@ -55,13 +46,36 @@ const VideoPlayer = () => {
         }
     }
 
+    const createPlaylist = async (userId: string) => {
+        const payload = {
+            userId: userId,
+            songs: [{ id: '36AKk9A5gH8' }, { id: 'TqXxNkP93Z8' }]
+        }
+
+        const playlistData = await axios.post("api/playlists/add", JSON.stringify(payload))
+
+        if (playlistData.status === 200) {
+            const list = playlistData.data.playlist.songs
+            setVideoList(list)
+            setPlaylistId(playlistData.data.playlist._id)
+            setVideoId(list[0].id)
+        }
+    }
+
     const getUserPlaylist = async (userId: string) => {
         try {
             if (userId) {
                 const playlistData = await axios.get(`api/users/${userId}`)
+                console.log(playlistData)
                 if (playlistData.status === 200) {
-                    const list = playlistData.data.playlist.songs
-                    setVideoList(list)
+                    if (playlistData.data.playlist.length > 0) {
+                        const list = playlistData.data.playlist[0].songs
+                        setVideoList(list)
+                        setPlaylistId(playlistData.data.playlist[0]._id)
+                    } else {
+                        createPlaylist(userId)
+                    }
+
                 }
             }
         } catch (e) {
@@ -74,6 +88,7 @@ const VideoPlayer = () => {
             const payload = {
                 id: videoId
             }
+            console.log(playlistId, "playlistId")
             if (playlistId) {
                 const playlistData = await axios.post(`api/playlists/${playlistId}/add-song`, JSON.stringify(payload))
                 if (playlistData.status === 200) {
@@ -158,11 +173,9 @@ const VideoPlayer = () => {
             clerk.openSignIn({})
         }
         const index = videoList?.findIndex((obj: any) => obj.id === videoId);
+        console.log(index)
         if (index === -1) {
-            const updatedList = [...videoList, { id: videoId }];
-            // setVideoList(updatedList);
             addVideoToList()
-            // localStorage.setItem("videoList", JSON.stringify(updatedList));
         }
     };
 
@@ -214,7 +227,7 @@ const VideoPlayer = () => {
                                 <div className="absolute -inset-2 rounded-lg opacity-50 blur-2xl animate-gradient"></div>
                                 <div className="relative flex w-full h-full items-center justify-center border-none rounded-lg bg-zinc-900 text-slate-300">
                                     <YouTube
-                                        className='rounded-md'
+                                        className='rounded-md w-full'
                                         videoId={videoId}
                                         opts={opts}
                                         onEnd={playNext}
@@ -223,9 +236,10 @@ const VideoPlayer = () => {
                             </div>
                         </Card>
                     }
+                    {videoList?.findIndex((obj: any) => obj.id == videoId) !== -1}
                     <AddToListButton
                         onClick={addToList}
-                        disabled={videoList?.findIndex((obj: any) => obj.id === videoId) === 1}
+                        disabled={videoList?.findIndex((obj: any) => obj.id == videoId) !== -1}
                         className="w-full sm:w-auto mt-4 px-4 py-2 text-sm sm:text-base flex items-center justify-center gap-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <FaPlus className="text-sm" />

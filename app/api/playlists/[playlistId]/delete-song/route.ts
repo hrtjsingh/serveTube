@@ -4,11 +4,11 @@ import { Playlist } from "@/models/Playlist";
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { playlistId: string } }
+  context: { params: Promise<{ playlistId: string }> }
 ) {
   try {
     await connectDB();
-    const { playlistId } = params;
+    const {playlistId}  = await context.params;
     const { id } = await req.json();
 
     const playlist = await Playlist.findByIdAndUpdate(
