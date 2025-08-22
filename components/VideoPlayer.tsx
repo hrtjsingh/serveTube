@@ -83,7 +83,7 @@ const VideoPlayer = () => {
         }
     }
 
-    const addVideoToList = async () => {
+    const addVideoToList = async (videoId: string) => {
         try {
             const payload = {
                 id: videoId
@@ -153,7 +153,15 @@ const VideoPlayer = () => {
             autoplay: 1,
         },
     };
-
+    const sync = () => {
+        const list = localStorage.getItem("videoList");
+        if (list) {
+            const parsedList = JSON.parse(list);
+            parsedList.forEach((element: any) => {
+                videoId(element.id)
+            });
+        }
+    }
     useEffect(() => {
         // const list = localStorage.getItem("videoList");
         // if (list) {
@@ -173,9 +181,8 @@ const VideoPlayer = () => {
             clerk.openSignIn({})
         }
         const index = videoList?.findIndex((obj: any) => obj.id === videoId);
-        console.log(index)
         if (index === -1) {
-            addVideoToList()
+            addVideoToList(videoId)
         }
     };
 
@@ -261,6 +268,7 @@ const VideoPlayer = () => {
                     </div>
                 )}
             </PlayerContainer>
+            <button onClick={sync}>sync</button>
         </MainContainer >
     );
 };
