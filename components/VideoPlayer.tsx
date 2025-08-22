@@ -157,7 +157,8 @@ const VideoPlayer = () => {
         const list = localStorage.getItem("videoList");
         if (list) {
             const parsedList = JSON.parse(list);
-            parsedList.forEach((element: any) => {
+            console.log(parsedList)
+            parsedList.map((element: any) => {
                 videoId(element.id)
             });
         }
