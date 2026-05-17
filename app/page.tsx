@@ -1,12 +1,24 @@
 import VideoPlayer from "@/components/VideoPlayer";
-import Image from "next/image"
-import Logo from '../assets/logo.svg'
+import { Onboarding } from "@/components/Onboarding";
+import Image from "next/image";
+import Logo from '../assets/logo.svg';
+
 export default function Home() {
   return (
-    <div className="grid place-items-center text-white mx-2 my-0 p-5 md:pt-10 md:mx-2 md:p-0">
-      <Image src={Logo} alt='logo' className="h-16 w-64 sm:h-20 sm:w-80 md:h-24 md:w-96 lg:w-[300px] xl:w-[300px] 2xl:w-[300px]" />
-      <p className="mt-0">Enjoy Ad Free YouTube videos</p>
+    <main className="flex flex-col items-center px-2 pt-4 pb-20 sm:pb-12">
+      <Onboarding />
+      <div className="text-center mb-4">
+        <Image
+          src={Logo}
+          alt="ServeTube logo"
+          className="h-12 w-auto mx-auto mb-1.5 sm:h-14"
+          priority
+        />
+        <p className="text-xs sm:text-sm text-muted-foreground">
+          Ad-free YouTube · Multiple playlists · Local or cloud sync
+        </p>
+      </div>
       <VideoPlayer />
-    </div>
+    </main>
   );
 }
