@@ -1,26 +1,34 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { Playlist } from "@/models/Playlist";
+import { requireAuth } from "@/lib/requireAuth";
+import { isValidObjectId } from "@/lib/validate";
 
 export async function GET(
-  req: Request,
+  _req: Request,
   context: { params: Promise<{ userId: string }> }
 ) {
+  // C2 FIX: require auth
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
+  const { userId } = await context.params;
+
+  // H3 FIX: validate ObjectId format to prevent NoSQL injection
+  if (!isValidObjectId(userId)) {
+    return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
+  }
+
+  // C2 FIX: users can only fetch their OWN playlists
+  if (auth.payload.id !== userId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   try {
     await connectDB();
-
-    // const { userId } = await context.params;
-    const userId = "68a88f642a8e27d83910bebf";
-    console.log(userId, "userId from API");
-
-    const playlist = await Playlist.find({ userId });
-
+    const playlist = await Playlist.find({ userId }).lean();
     return NextResponse.json({ playlist });
-  } catch (err) {
-    console.error("Error fetching playlists:", err);
-    return NextResponse.json(
-      { error: "Failed to fetch playlists" },
-      { status: 500 }
-    );
+  } catch {
+    return NextResponse.json({ error: "Failed to fetch playlists" }, { status: 500 });
   }
 }

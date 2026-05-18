@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { Playlist } from "@/models/Playlist";
 import { requireAuth } from "@/lib/requireAuth";
 import { requirePlaylistOwner } from "@/lib/requirePlaylistOwner";
-import { sanitizeSongs } from "@/lib/validate";
+import { sanitizeString, isValidColor, LIMITS } from "@/lib/validate";
 
-export async function POST(
+export async function PATCH(
   req: Request,
   context: { params: Promise<{ playlistId: string }> }
 ) {
@@ -19,15 +19,26 @@ export async function POST(
     const body = await req.json().catch(() => null);
     if (!body) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
-    // H5 FIX: validate and sanitize entire songs array
-    const songs = sanitizeSongs(body.songs ?? []);
-    if (songs === null) {
-      return NextResponse.json({ error: "Invalid songs data" }, { status: 400 });
+    // M4 + M5 FIX: sanitize all user inputs
+    const update: Record<string, string> = {};
+    if (body.name !== undefined) {
+      const name = sanitizeString(body.name, LIMITS.NAME_MAX);
+      if (name.length < 1) return NextResponse.json({ error: "Name required" }, { status: 400 });
+      update.name = name;
+    }
+    if (body.description !== undefined) {
+      update.description = sanitizeString(body.description, LIMITS.DESCRIPTION_MAX);
+    }
+    if (body.coverColor !== undefined) {
+      if (!isValidColor(body.coverColor)) {
+        return NextResponse.json({ error: "Invalid color — must be a 6-digit hex value" }, { status: 400 });
+      }
+      update.coverColor = body.coverColor;
     }
 
     const playlist = await Playlist.findByIdAndUpdate(
       playlistId,
-      { $set: { songs } },
+      { $set: update },
       { new: true }
     );
     return NextResponse.json({ playlist });

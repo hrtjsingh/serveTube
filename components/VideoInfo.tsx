@@ -1,70 +1,84 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import styled from 'styled-components';
-import { SlOptionsVertical } from "react-icons/sl";
-import { FaPlay } from "react-icons/fa";
-import { MdDelete } from "react-icons/md";
-
-import useClickOutside from '@/utils/useClickOutside';
-import { Card, CardContent } from './ui/card';
-
+import { Play, Trash2, GripVertical, Loader2 } from 'lucide-react';
 
 const VideoInfo = ({ id, index, changeVideo, deleteVideo, playingVideo, dragHandleProps }: any) => {
-    const [videoInfo, setVideoInfo] = useState<any>(null);
+  const [thumb, setThumb] = useState('');
+  const [title, setTitle] = useState('');
+  const [loading, setLoading] = useState(true);
 
-    const [showOptions, setShowOptions] = useState(false);
-    const [error, setError] = useState("");
-    const key = process.env.NEXT_PUBLIC_API_KEY
-    const ref = useClickOutside(() => setShowOptions(false));
-    const getData = async () => {
-        try {
-            const response = await axios.get(
-                `https://www.googleapis.com/youtube/v3/videos?key=${key}&part=snippet&id=${id}`
-            );
+  useEffect(() => {
+    setLoading(true);
+    // Use YouTube oEmbed — no API key needed!
+    fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`)
+      .then(r => r.json())
+      .then(d => {
+        setTitle(d.title || id);
+        setThumb(`https://i.ytimg.com/vi/${id}/mqdefault.jpg`);
+      })
+      .catch(() => {
+        setTitle(id);
+        setThumb(`https://i.ytimg.com/vi/${id}/mqdefault.jpg`);
+      })
+      .finally(() => setLoading(false));
+  }, [id]);
 
-            setVideoInfo(response.data.items[0].snippet);
-            setError("");
-        } catch (err) {
-            setError('Video not found or API request failed.');
-            setVideoInfo(null);
+  return (
+    <div className={`group flex items-center gap-2 p-2 rounded-lg transition-colors cursor-pointer ${
+      playingVideo ? 'bg-[#f8bf59]/10 border border-[#f8bf59]/30' : 'hover:bg-muted/50 border border-transparent'
+    }`}>
+      {/* Drag handle */}
+      <span {...dragHandleProps} className="cursor-grab text-muted-foreground/40 group-hover:text-muted-foreground p-1 transition-colors touch-none">
+        <GripVertical size={14} />
+      </span>
+
+      {/* Index / playing indicator */}
+      <span className="w-5 flex items-center justify-center text-xs text-muted-foreground flex-shrink-0">
+        {playingVideo
+          ? <Play size={11} className="text-[#f8bf59] fill-[#f8bf59]" />
+          : <span className="font-mono">{index + 1}</span>
         }
-    };
-    const deleteVid = (id: string) => {
-        deleteVideo(id)
-        setShowOptions(false)
-    }
-    useEffect(() => {
-        getData()
-    }, [id])
+      </span>
 
-    return (
-        <>
-            {error && <CardContent><p>{error}</p></CardContent>}
-            {videoInfo && (
-                <CardContent className='p-2 ' >
-                    <div className='flex items-center p-2 gap-2 w-full rounded-md relative hover:bg-slate-500 transition-colors duration-300 ease-in-out'>
-                        <span {...dragHandleProps} className="cursor-grab px-2 select-none">☰</span>
-                        <span className='w-10 text-sm text-center'>{playingVideo ? <FaPlay className='text-sm md:text-md' /> : index + 1}</span>
-                        <div className='flex items-center flex-row md:w-[400px] gap-2 md:gap-4 cursor-pointer' onClick={() => { changeVideo(id) }}>
-                            <img src={videoInfo?.thumbnails?.default?.url} alt="Thumbnail" className='w-[65px] md:w-[120px]' />
-                            <h5 className='space-x-5 text-xs md:text-base'>{videoInfo?.title?.split(' ').slice(0, 10).join(' ')}{videoInfo?.title?.split(' ').length > 10 ? '...' : ''}</h5>
-                        </div>
-                        <div className='user-select-none relative '>
-                            <SlOptionsVertical className='cursor-pointer' size="16px" onClick={() => { setShowOptions(!showOptions) }} />
-                            {showOptions && <div className="absolute flex items-center justify-center top-[120%] z-40 right-[-65%] p-2 font-semibold bg-[#f0f8ff] text-black rounded hover:bg-[#a7b0b8]" ref={ref as any}>
-                                <div className='cursor-pointer'>
-                                    <MdDelete className='cursor-pointer' color='red' size="20px" onClick={() => { deleteVid(id) }} />
-                                </div>
-                            </div>}
-                        </div>
-                    </div>
-                </CardContent>
-            )}
-        </>
-    )
+      {/* Thumbnail */}
+      <div
+        className="relative flex-shrink-0 rounded overflow-hidden bg-muted"
+        style={{ width: 72, height: 40 }}
+        onClick={() => changeVideo(id)}
+      >
+        {loading ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Loader2 size={14} className="animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <img src={thumb} alt={title} className="w-full h-full object-cover" />
+        )}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity">
+          <Play size={14} className="text-white fill-white" />
+        </div>
+      </div>
+
+      {/* Title */}
+      <div
+        className="flex-1 min-w-0 cursor-pointer"
+        onClick={() => changeVideo(id)}
+      >
+        <p className="truncate text-xs font-medium leading-snug">
+          {loading ? <span className="text-muted-foreground">Loading…</span> : title}
+        </p>
+        <p className="font-mono text-[10px] text-muted-foreground/60 mt-0.5">{id}</p>
+      </div>
+
+      {/* Delete */}
+      <button
+        onClick={e => { e.stopPropagation(); deleteVideo(id); }}
+        className="flex-shrink-0 rounded p-1.5 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+        title="Remove"
+      >
+        <Trash2 size={13} />
+      </button>
+    </div>
+  );
 };
 
 export default VideoInfo;
-
-

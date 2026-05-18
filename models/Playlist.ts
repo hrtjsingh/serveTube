@@ -6,13 +6,12 @@ const songSchema = new Schema({
 
 const PlaylistSchema = new Schema(
   {
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-      unique: true,
-    },
-    songs: [songSchema],
+    userId:      { type: Schema.Types.ObjectId, ref: "User", required: true },
+    name:        { type: String, required: true, default: "My Playlist" },
+    description: { type: String, default: "" },
+    coverColor:  { type: String, default: "#f8bf59" },
+    songs:       [songSchema],
+    isDefault:   { type: Boolean, default: false },
   },
   { timestamps: true }
 );

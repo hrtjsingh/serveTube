@@ -1,44 +1,48 @@
-import { ClerkProvider } from '@/components/clerk-provider'
+import { AuthProvider } from '@/context/AuthContext'
+import { AppThemeProvider } from '@/context/ThemeContext'
 import { Header } from '@/components/header'
+import { MobileNav } from '@/components/MobileNav'
 import { ThemeProvider } from '@/components/theme-provider'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
-import Head from 'next/head'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
+const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
+const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-})
+export const viewport: Viewport = {
+  themeColor: '#f8bf59',
+  width: 'device-width',
+  initialScale: 1,
+}
 
 export const metadata: Metadata = {
   title: 'ServeTube',
-  description: 'Your New YouTube Player',
+  description: 'Ad-free YouTube player with playlists',
+  manifest: '/manifest.json',
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'ServeTube' },
+  other: { 'mobile-web-app-capable': 'yes' },
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
-      <html lang="en" className="h-full" suppressHydrationWarning>
-        <Head>
-          <link rel="icon" href="./favicon.ico" sizes="any" />
-        </Head>
-        <body className={`${geistSans.variable} ${geistMono.variable} bg-background flex min-h-full flex-col antialiased`}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <Header />
-            {children}
-          </ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" className="h-full dark" suppressHydrationWarning>
+      <head>
+        <link rel="apple-touch-icon" href="/logo192.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} bg-background flex min-h-full flex-col antialiased pb-16 sm:pb-0`}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+          <AuthProvider>
+            <AppThemeProvider>
+              <Header />
+              <main className="flex-1">{children}</main>
+              <MobileNav />
+            </AppThemeProvider>
+          </AuthProvider>
+        </ThemeProvider>
+        
+      </body>
+    </html>
   )
 }
