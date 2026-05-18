@@ -3,7 +3,6 @@ import { connectDB } from "@/lib/mongodb";
 import { Playlist } from "@/models/Playlist";
 import { requireAuth } from "@/lib/requireAuth";
 import { sanitizeString, isValidColor, sanitizeSongs, LIMITS } from "@/lib/validate";
-import error from "next/error";
 
 export async function POST(req: Request) {
   // C1 FIX: require authenticated session
@@ -50,16 +49,15 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, playlist }, { status: 201 });
-  } catch {
-    console.error("CREATE PLAYLIST ERROR:", error);
+  } catch (err) {
+    console.error("CREATE PLAYLIST ERROR:", err);
 
-  return NextResponse.json(
-    {
-      error: "Failed to create playlist",
-      details:
-        error instanceof Error ? error.message : "Unknown error",
-    },
-    { status: 500 }
-  );
+    return NextResponse.json(
+      {
+        error: "Failed to create playlist",
+        details: err instanceof Error ? err.message : "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }

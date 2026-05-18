@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Types } from "mongoose";
 import { Playlist } from "@/models/Playlist";
 import { connectDB } from "./mongodb";
 import { isValidObjectId } from "./validate";
@@ -20,7 +21,7 @@ export async function requirePlaylistOwner(
   }
 
   await connectDB();
-  const playlist = await Playlist.findById(playlistId).lean();
+  const playlist = await Playlist.findById(playlistId).lean<{ userId: Types.ObjectId } | null>();
 
   if (!playlist) {
     return { error: NextResponse.json({ error: "Playlist not found" }, { status: 404 }) };
