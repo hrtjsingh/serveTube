@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import List from './List'
 import { useAuth } from '@/context/AuthContext'
-import { usePlayer, extractVideoId } from '@/context/PlayerContext'
+import { usePlayer, extractVideoId, isYouTubeMusicUrl } from '@/context/PlayerContext'
 import { PlaylistManager, PlaylistDoc } from './PlaylistManager'
 import axios from 'axios'
 import AuthModal from './AuthModal'
@@ -235,7 +235,15 @@ export default function VideoPlayer() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const id = extractVideoId(videoURL.trim())
-    if (!id) { showToast('Invalid YouTube URL or video ID', 'error'); return }
+    if (!id) {
+      showToast(
+        isYouTubeMusicUrl(videoURL.trim())
+          ? 'Use a YouTube Music song link (watch?v=…), not album/artist browse pages'
+          : 'Invalid YouTube / YouTube Music URL or video ID',
+        'error'
+      )
+      return
+    }
     setVideoId(id); setVideoURL('')
   }
 
@@ -305,7 +313,7 @@ export default function VideoPlayer() {
         className="flex flex-col sm:flex-row items-center gap-3 rounded-xl border border-border bg-card p-3 sm:p-4 shadow-sm">
         <div className="relative flex-1 w-full">
           <Play size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" placeholder="Paste YouTube URL or video ID…" value={videoURL}
+          <input type="text" placeholder="Paste YouTube or YouTube Music link / video ID…" value={videoURL}
             onChange={e => setVideoURL(e.target.value)}
             className="w-full rounded-lg border border-input bg-background pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#f8bf59] transition-colors placeholder:text-muted-foreground" />
         </div>

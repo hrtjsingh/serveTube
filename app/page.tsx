@@ -15,7 +15,7 @@ export default function Home() {
           priority
         />
         <p className="text-xs sm:text-sm text-muted-foreground">
-          Ad-free YouTube · Multiple playlists · Local or cloud sync
+          Ad-free YouTube & YouTube Music · Playlists · Local or cloud sync
         </p>
       </div>
       <VideoPlayer />

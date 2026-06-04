@@ -185,13 +185,15 @@ function ImportModal({
   }
 
   return (
-    <Modal title="Import from YouTube" onClose={onClose}>
+    <Modal title="Import playlist" onClose={onClose}>
       <div className="space-y-4">
-        <p className="text-xs text-muted-foreground">Paste a YouTube playlist URL or playlist ID (starts with PL…)</p>
+        <p className="text-xs text-muted-foreground">
+          Paste a YouTube or YouTube Music playlist URL (youtube.com or music.youtube.com, list=…)
+        </p>
         <div className="flex gap-2">
           <input
             className={`${INPUT} flex-1`}
-            placeholder="https://youtube.com/playlist?list=PL…"
+            placeholder="https://music.youtube.com/playlist?list=…"
             value={url}
             onChange={e => { setUrl(e.target.value); setError(''); setPreview(null) }}
             onKeyDown={e => e.key === 'Enter' && fetchPlaylist()}

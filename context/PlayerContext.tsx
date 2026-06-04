@@ -15,12 +15,7 @@ import { readLocalJson, writeLocalJson } from '@/lib/storage'
 const LS_HIST = 'servetube_watch_history'
 const DEFAULT_VIDEO = '36AKk9A5gH8'
 
-export function extractVideoId(link: string): string {
-  const re =
-    /^(?:(?:https?:)?\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/ \r\n]{11})/
-  const m = link.match(re)
-  return m ? m[1] : link.length === 11 ? link : ''
-}
+export { extractVideoId, extractPlaylistId, isYouTubeMusicUrl } from '@/lib/youtubeUrls'
 
 type QueueItem = { id: string }
 

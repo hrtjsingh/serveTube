@@ -1,7 +1,7 @@
 {
   "name": "ServeTube",
   "short_name": "ServeTube",
-  "description": "Ad-free YouTube player with playlists",
+  "description": "Ad-free YouTube and YouTube Music player with playlists",
   "id": "/",
   "start_url": "/",
   "scope": "/",
