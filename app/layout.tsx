@@ -22,7 +22,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: 'ServeTube',
-  description: 'Ad-free YouTube player with playlists',
+  description: 'Ad-free YouTube and YouTube Music player with playlists',
   manifest: '/manifest.json',
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'ServeTube' },
   other: { 'mobile-web-app-capable': 'yes' },

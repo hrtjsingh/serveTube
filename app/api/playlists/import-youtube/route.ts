@@ -2,19 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/requireAuth";
 import { checkRateLimit, API_LIMIT, getClientIp } from "@/lib/rateLimit";
 import { LIMITS } from "@/lib/validate";
-
-function extractPlaylistId(input: string): string | null {
-  // Allow only valid YouTube playlist ID format
-  if (/^PL[A-Za-z0-9_-]{16,}$/.test(input)) return input;
-  try {
-    const url  = new URL(input);
-    const list = url.searchParams.get("list");
-    if (list && /^PL[A-Za-z0-9_-]{16,}$/.test(list)) return list;
-    return null;
-  } catch {
-    return null;
-  }
-}
+import { extractPlaylistId } from "@/lib/youtubeUrls";
 
 export async function POST(req: Request) {
   // H6 FIX: require authenticated user
@@ -35,7 +23,10 @@ export async function POST(req: Request) {
 
     const playlistId = extractPlaylistId(body.url.trim());
     if (!playlistId) {
-      return NextResponse.json({ error: "Invalid YouTube playlist URL or ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid YouTube or YouTube Music playlist URL or ID" },
+        { status: 400 }
+      );
     }
 
     const apiKey = process.env.YOUTUBE_API_KEY;

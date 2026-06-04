@@ -7,8 +7,8 @@ const STEPS = [
     icon: Play,
     color: 'text-red-400',
     bg: 'bg-red-400/10',
-    title: 'Play any YouTube video, ad-free',
-    desc: 'Paste any YouTube URL or video ID into the search bar and hit Play. No ads, no distractions.',
+    title: 'Play YouTube & YouTube Music, ad-free',
+    desc: 'Paste a YouTube or YouTube Music song link (watch?v=…) or video ID, then hit Play. No ads.',
   },
   {
     icon: ListVideo,
@@ -21,8 +21,8 @@ const STEPS = [
     icon: Download,
     color: 'text-purple-400',
     bg: 'bg-purple-400/10',
-    title: 'Import from YouTube',
-    desc: 'Paste a YouTube playlist URL to instantly import all its videos. Exports to JSON too.',
+    title: 'Import from YouTube / Music',
+    desc: 'Paste a YouTube or YouTube Music playlist link to import tracks. Exports to JSON too.',
   },
   {
     icon: CloudUpload,
