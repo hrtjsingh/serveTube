@@ -33,7 +33,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/logo192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} bg-background flex min-h-full flex-col antialiased pb-16 sm:pb-0`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} bg-background flex min-h-full flex-col antialiased pb-16 sm:pb-0`}
+        suppressHydrationWarning
+      >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
           <AuthProvider>
             <PlayerProvider>

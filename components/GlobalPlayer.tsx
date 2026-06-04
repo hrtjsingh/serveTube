@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import YouTube from 'react-youtube'
 import { usePathname, useRouter } from 'next/navigation'
 import { usePlayer } from '@/context/PlayerContext'
@@ -23,6 +23,8 @@ export function GlobalPlayer() {
   const router = useRouter()
   const {
     videoId,
+    videoTitle,
+    titleLoading,
     playNext,
     hasStarted,
     playerSlotRef,
@@ -33,6 +35,11 @@ export function GlobalPlayer() {
 
   const playerContainerRef = useRef<HTMLDivElement>(null)
   const ytReadyRef = useRef(false)
+  const [playerMounted, setPlayerMounted] = useState(false)
+
+  useEffect(() => {
+    setPlayerMounted(true)
+  }, [])
 
   const isHome = pathname === '/'
   const showMini = hasStarted && !isHome
@@ -95,23 +102,25 @@ export function GlobalPlayer() {
         style={HIDDEN_PLAYER_STYLE}
         aria-hidden={!showOnHome}
       >
-        <YouTube
-          className="w-full h-full"
-          videoId={videoId}
-          opts={{
-            width: '100%',
-            height: '100%',
-            playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1, controls: 1 },
-          }}
-          onReady={e => {
-            setYtPlayer(e.target)
-            if (!ytReadyRef.current) {
-              ytReadyRef.current = true
-              markPlayerActive()
-            }
-          }}
-          onEnd={playNext}
-        />
+        {playerMounted ? (
+          <YouTube
+            className="w-full h-full"
+            videoId={videoId}
+            opts={{
+              width: '100%',
+              height: '100%',
+              playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1, controls: 1 },
+            }}
+            onReady={e => {
+              setYtPlayer(e.target)
+              if (!ytReadyRef.current) {
+                ytReadyRef.current = true
+                markPlayerActive()
+              }
+            }}
+            onEnd={playNext}
+          />
+        ) : null}
       </div>
 
       {showMini && (
@@ -138,7 +147,9 @@ export function GlobalPlayer() {
               className="flex-1 min-w-0 text-left"
             >
               <p className="text-xs text-muted-foreground">Now playing</p>
-              <p className="text-sm font-mono font-medium truncate">{videoId}</p>
+              <p className="text-sm font-medium truncate">
+                {titleLoading ? 'Loading…' : videoTitle}
+              </p>
             </button>
             <div className="flex items-center gap-1 flex-shrink-0">
               <button

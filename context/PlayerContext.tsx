@@ -9,22 +9,11 @@ import React, {
   useState,
 } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { fetchYouTubeTitle } from '@/lib/youtubeMetadata'
+import { readLocalJson, writeLocalJson } from '@/lib/storage'
 
 const LS_HIST = 'servetube_watch_history'
 const DEFAULT_VIDEO = '36AKk9A5gH8'
-
-const lsGet = (k: string, fallback: unknown = null) => {
-  try {
-    return JSON.parse(localStorage.getItem(k) as string) ?? fallback
-  } catch {
-    return fallback
-  }
-}
-const lsSet = (k: string, v: unknown) => {
-  try {
-    localStorage.setItem(k, JSON.stringify(v))
-  } catch {}
-}
 
 export function extractVideoId(link: string): string {
   const re =
@@ -37,6 +26,8 @@ type QueueItem = { id: string }
 
 interface PlayerCtx {
   videoId: string
+  videoTitle: string
+  titleLoading: boolean
   setVideoId: (id: string) => void
   queue: QueueItem[]
   setQueue: (q: QueueItem[]) => void
@@ -67,7 +58,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [hasStarted, setHasStarted] = useState(false)
   const [ytPlayer, setYtPlayer] = useState<unknown | null>(null)
   const [homeSlotReady, setHomeSlotReady] = useState(false)
+  const [videoTitle, setVideoTitle] = useState('')
+  const [titleLoading, setTitleLoading] = useState(true)
   const playerSlotRef = useRef<HTMLDivElement | null>(null)
+  const titleCacheRef = useRef<Record<string, string>>({})
 
   const setPlayerSlotEl = useCallback((node: HTMLDivElement | null) => {
     playerSlotRef.current = node
@@ -75,9 +69,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const addToHistory = useCallback((id: string) => {
-    const hist = (lsGet(LS_HIST, []) as { id: string; watchedAt: number }[]) || []
+    const hist = readLocalJson<{ id: string; watchedAt: number }[]>(LS_HIST, [])
     const updated = [{ id, watchedAt: Date.now() }, ...hist.filter(x => x.id !== id)].slice(0, 50)
-    lsSet(LS_HIST, updated)
+    writeLocalJson(LS_HIST, updated)
   }, [])
 
   const setVideoId = useCallback(
@@ -104,10 +98,36 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     [setVideoId]
   )
 
+  useEffect(() => {
+    const cached = titleCacheRef.current[videoId]
+    if (cached) {
+      setVideoTitle(cached)
+      setTitleLoading(false)
+      return
+    }
+
+    let cancelled = false
+    setTitleLoading(true)
+    setVideoTitle('')
+
+    fetchYouTubeTitle(videoId).then(title => {
+      if (cancelled) return
+      titleCacheRef.current[videoId] = title
+      setVideoTitle(title)
+      setTitleLoading(false)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [videoId])
+
   return (
     <PlayerContext.Provider
       value={{
         videoId,
+        videoTitle,
+        titleLoading,
         setVideoId,
         queue,
         setQueue,

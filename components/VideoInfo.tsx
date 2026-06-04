@@ -1,6 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import { Play, Trash2, GripVertical, Loader2 } from 'lucide-react';
+import { fetchYouTubeTitle } from '@/lib/youtubeMetadata';
 
 const VideoInfo = ({ id, index, changeVideo, deleteVideo, playingVideo, dragHandleProps }: any) => {
   const [thumb, setThumb] = useState('');
@@ -9,17 +10,10 @@ const VideoInfo = ({ id, index, changeVideo, deleteVideo, playingVideo, dragHand
 
   useEffect(() => {
     setLoading(true);
-    // Use YouTube oEmbed — no API key needed!
-    fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`)
-      .then(r => r.json())
-      .then(d => {
-        setTitle(d.title || id);
-        setThumb(`https://i.ytimg.com/vi/${id}/mqdefault.jpg`);
-      })
-      .catch(() => {
-        setTitle(id);
-        setThumb(`https://i.ytimg.com/vi/${id}/mqdefault.jpg`);
-      })
+    setThumb(`https://i.ytimg.com/vi/${id}/mqdefault.jpg`);
+    fetchYouTubeTitle(id)
+      .then(t => setTitle(t))
+      .catch(() => setTitle(id))
       .finally(() => setLoading(false));
   }, [id]);
 

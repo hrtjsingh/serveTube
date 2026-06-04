@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation'
 import { usePlayer } from '@/context/PlayerContext'
 import { Play, Trash2, History, Clock } from 'lucide-react'
 
+import { readLocalJson, writeLocalJson } from '@/lib/storage'
+
 const LS_HIST = 'servetube_watch_history'
-const lsGet = (k: string, fb: any = null) => { try { return JSON.parse(localStorage.getItem(k) as string) ?? fb } catch { return fb } }
-const lsSet = (k: string, v: any) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
 
 function timeAgo(ts: number): string {
   const s = Math.floor((Date.now() - ts) / 1000)
@@ -25,12 +25,12 @@ export default function HistoryPage() {
 
   const playVideo = (id: string) => setVideoId(id)
 
-  useEffect(() => { setHistory(lsGet(LS_HIST, [])) }, [])
+  useEffect(() => { setHistory(readLocalJson(LS_HIST, [])) }, [])
 
-  const clear = () => { setHistory([]); lsSet(LS_HIST, []) }
+  const clear = () => { setHistory([]); writeLocalJson(LS_HIST, []) }
   const remove = (id: string, ts: number) => {
     const updated = history.filter(x => !(x.id === id && x.watchedAt === ts))
-    setHistory(updated); lsSet(LS_HIST, updated)
+    setHistory(updated); writeLocalJson(LS_HIST, updated)
   }
 
   return (
@@ -79,7 +79,7 @@ export default function HistoryPage() {
               {/* Info */}
               <div className="flex-1 min-w-0 cursor-pointer" onClick={() => playVideo(h.id)}>
                 <p className="text-sm font-mono font-medium truncate">{h.id}</p>
-                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5" suppressHydrationWarning>
                   <Clock size={10} /> {timeAgo(h.watchedAt)}
                 </p>
               </div>

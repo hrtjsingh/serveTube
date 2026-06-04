@@ -11,16 +11,11 @@ import {
   AlertCircle, ChevronRight, CloudUpload, CheckCircle2,
   Loader2, WifiOff, Clock, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react'
+import { readLocalJson, writeLocalJson } from '@/lib/storage'
 
-// ── localStorage helpers ──────────────────────────────────────────────────
 const LS_PLAYLIST  = 'servetube_local_playlist'
 const LS_HIST      = 'servetube_watch_history'
 const LS_PLAYLISTS = 'servetube_local_playlists'
-
-const lsGet = (k: string, fallback: any = null) => {
-  try { return JSON.parse(localStorage.getItem(k) as string) ?? fallback } catch { return fallback }
-}
-const lsSet = (k: string, v: any) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
 
 function timeAgo(ts: number): string {
   const s = Math.floor((Date.now() - ts) / 1000)
@@ -44,7 +39,7 @@ const DEFAULT_LOCAL: LocalPlaylist = {
 
 export default function VideoPlayer() {
   const { user, isSignedIn, isLoaded } = useAuth()
-  const { videoId, setVideoId, setQueue, setPlayerSlotEl } = usePlayer()
+  const { videoId, videoTitle, titleLoading, setVideoId, setQueue, setPlayerSlotEl } = usePlayer()
 
   const [videoURL, setVideoURL] = useState('')
   const [showAuth, setShowAuth] = useState(false)
@@ -61,14 +56,20 @@ export default function VideoPlayer() {
   const [syncError, setSyncError]           = useState<string | null>(null)
   const initialLoadDone = useRef(false)
 
-  // ── Guest local playlist state ──────────────────────────────────────────
-  const [localPlaylists, setLocalPlaylists] = useState<LocalPlaylist[]>(() =>
-    lsGet(LS_PLAYLISTS, [DEFAULT_LOCAL])
-  )
+  // ── Guest local playlist state (defaults until client hydration) ─────────
+  const [localPlaylists, setLocalPlaylists] = useState<LocalPlaylist[]>([DEFAULT_LOCAL])
   const [activeLocalId, setActiveLocalId]   = useState<string>('local-default')
-  const [history, setHistory]               = useState<{ id: string; watchedAt: number }[]>(() =>
-    lsGet(LS_HIST, [])
-  )
+  const [history, setHistory]               = useState<{ id: string; watchedAt: number }[]>([])
+  const [storageReady, setStorageReady]     = useState(false)
+
+  useEffect(() => {
+    const saved = readLocalJson(LS_PLAYLISTS, [DEFAULT_LOCAL])
+    const playlists = saved.length ? saved : [DEFAULT_LOCAL]
+    setLocalPlaylists(playlists)
+    setActiveLocalId(playlists[0]?._id || 'local-default')
+    setHistory(readLocalJson(LS_HIST, []))
+    setStorageReady(true)
+  }, [])
 
   // ── Active song list (derived) ───────────────────────────────────────────
   const activeList: { id: string }[] = isSignedIn
@@ -87,20 +88,23 @@ export default function VideoPlayer() {
     } else {
       setLocalPlaylists(ps => {
         const updated = ps.map(p => p._id === activeLocalId ? { ...p, songs } : p)
-        lsSet(LS_PLAYLISTS, updated)
+        writeLocalJson(LS_PLAYLISTS, updated)
         return updated
       })
     }
   }
 
   // Persist history
-  useEffect(() => { lsSet(LS_HIST, history) }, [history])
+  useEffect(() => {
+    if (!storageReady) return
+    writeLocalJson(LS_HIST, history)
+  }, [history, storageReady])
 
   // On auth change
   useEffect(() => {
     if (!isLoaded) return
     if (!isSignedIn) {
-      const saved = lsGet(LS_PLAYLISTS, [DEFAULT_LOCAL])
+      const saved = readLocalJson(LS_PLAYLISTS, [DEFAULT_LOCAL])
       setLocalPlaylists(saved.length ? saved : [DEFAULT_LOCAL])
       setActiveLocalId(saved[0]?._id || 'local-default')
       initialLoadDone.current = false
@@ -114,7 +118,7 @@ export default function VideoPlayer() {
     setTimeout(() => setToast(null), 3500)
   }, [])
 
-  const refreshHistory = () => setHistory(lsGet(LS_HIST, []))
+  const refreshHistory = () => setHistory(readLocalJson(LS_HIST, []))
 
   useEffect(() => {
     refreshHistory()
@@ -129,7 +133,7 @@ export default function VideoPlayer() {
       const res = await axios.get(`/api/users/${uid}`)
       const ps: PlaylistDoc[] = res.data.playlist || []
 
-      const localList = lsGet(LS_PLAYLIST, [])
+      const localList = readLocalJson(LS_PLAYLIST, [])
 
       if (ps.length === 0) {
         // Create default playlist, optionally seeding from local storage
@@ -142,7 +146,7 @@ export default function VideoPlayer() {
         setDbPlaylists([created])
         setActivePlaylistId(created._id)
         setLastSynced(Date.now()); setIsDirty(false)
-        if (localList.length) lsSet(LS_PLAYLIST, [])
+        if (localList.length) writeLocalJson(LS_PLAYLIST, [])
       } else {
         // Merge local list into first playlist
         const first = ps[0]
@@ -153,7 +157,7 @@ export default function VideoPlayer() {
         if (localList.length) {
           await axios.post(`/api/playlists/${first._id}/update`, { songs: merged })
           ps[0] = { ...first, songs: merged }
-          lsSet(LS_PLAYLIST, [])
+          writeLocalJson(LS_PLAYLIST, [])
         }
         initialLoadDone.current = true
         setDbPlaylists(ps)
@@ -267,7 +271,7 @@ export default function VideoPlayer() {
       _id: `local-${Date.now()}`, name, description: '', coverColor: '#f8bf59', songs: [], isDefault: false
     }
     const updated = [...localPlaylists, newP]
-    setLocalPlaylists(updated); lsSet(LS_PLAYLISTS, updated)
+    setLocalPlaylists(updated); writeLocalJson(LS_PLAYLISTS, updated)
     setActiveLocalId(newP._id)
     showToast(`Playlist "${name}" created ✓`, 'success')
   }
@@ -275,9 +279,9 @@ export default function VideoPlayer() {
     const remaining = localPlaylists.filter(p => p._id !== id)
     if (!remaining.length) {
       const def = { ...DEFAULT_LOCAL }
-      setLocalPlaylists([def]); lsSet(LS_PLAYLISTS, [def]); setActiveLocalId(def._id)
+      setLocalPlaylists([def]); writeLocalJson(LS_PLAYLISTS, [def]); setActiveLocalId(def._id)
     } else {
-      setLocalPlaylists(remaining); lsSet(LS_PLAYLISTS, remaining)
+      setLocalPlaylists(remaining); writeLocalJson(LS_PLAYLISTS, remaining)
       if (activeLocalId === id) setActiveLocalId(remaining[0]._id)
     }
     showToast('Playlist deleted', 'info')
@@ -312,7 +316,7 @@ export default function VideoPlayer() {
       </form>
 
       {/* ── Player + Sidebar ── */}
-      <div className="flex gap-4">
+      <div className="flex flex-col lg:flex-row gap-4">
 
         {/* Player column */}
         <div className="flex-1 min-w-0 space-y-4">
@@ -326,11 +330,20 @@ export default function VideoPlayer() {
             </div>
             {/* Controls */}
             <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-t border-border">
-              <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded select-all">{videoId}</span>
+              <p className="text-sm font-medium leading-snug line-clamp-2 min-w-0 flex-1">
+                {titleLoading ? (
+                  <span className="text-muted-foreground text-xs">Loading title…</span>
+                ) : (
+                  videoTitle
+                )}
+              </p>
               <div className="ml-auto flex items-center gap-2">
                 <button onClick={() => setSidebarOpen(s => !s)}
-                  className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                  className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-expanded={sidebarOpen}
+                  aria-label={sidebarOpen ? 'Hide playlist' : 'Show playlist'}>
                   {sidebarOpen ? <PanelLeftClose size={13} /> : <PanelLeftOpen size={13} />}
+                  <span className="lg:hidden">{sidebarOpen ? 'Hide' : 'Playlist'}</span>
                 </button>
                 <button onClick={playNext} disabled={activeList.length < 2}
                   className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30">
@@ -363,7 +376,7 @@ export default function VideoPlayer() {
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Recent</h3>
-                <button onClick={() => { setHistory([]); lsSet(LS_HIST, []) }}
+                <button onClick={() => { setHistory([]); writeLocalJson(LS_HIST, []) }}
                   className="text-xs text-muted-foreground hover:text-destructive transition-colors">Clear</button>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -380,7 +393,7 @@ export default function VideoPlayer() {
 
         {/* ── Sidebar ── */}
         {sidebarOpen && (
-          <div className="hidden lg:flex w-[360px] xl:w-[400px] flex-shrink-0 flex-col gap-3">
+          <div className="flex w-full lg:w-[360px] xl:w-[400px] flex-shrink-0 flex-col gap-3">
 
             {/* ── Playlist Manager (auth users) ── */}
             {isSignedIn && user && (
@@ -455,8 +468,8 @@ export default function VideoPlayer() {
                       <p className={`text-xs font-semibold ${syncError ? 'text-red-400' : isDirty ? 'text-yellow-300' : 'text-emerald-400'}`}>
                         {syncError ? 'Sync failed' : isDirty ? 'Unsaved changes' : 'Up to date'}
                       </p>
-                      {lastSynced && !isDirty && !syncError && (
-                        <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                      {storageReady && lastSynced && !isDirty && !syncError && (
+                        <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5" suppressHydrationWarning>
                           <Clock size={10} /> {timeAgo(lastSynced)}
                         </p>
                       )}
