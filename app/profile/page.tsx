@@ -6,8 +6,9 @@ import { useRouter } from 'next/navigation'
 import { User, ListVideo, History, LogOut, Settings, ChevronRight, Music2 } from 'lucide-react'
 import AuthModal from '@/components/AuthModal'
 
+import { readLocalJson } from '@/lib/storage'
+
 const LS_HIST = 'servetube_watch_history'
-const lsGet = (k: string, fb: any = null) => { try { return JSON.parse(localStorage.getItem(k) as string) ?? fb } catch { return fb } }
 
 export default function ProfilePage() {
   const { user, isSignedIn, isLoaded, logout } = useAuth()
@@ -15,7 +16,11 @@ export default function ProfilePage() {
   const [showAuth, setShowAuth]   = useState(false)
   const [plCount, setPlCount]     = useState(0)
   const [songCount, setSongCount] = useState(0)
-  const histCount = lsGet(LS_HIST, []).length
+  const [histCount, setHistCount] = useState(0)
+
+  useEffect(() => {
+    setHistCount(readLocalJson(LS_HIST, []).length)
+  }, [])
 
   useEffect(() => {
     if (!isSignedIn || !user) return

@@ -67,7 +67,11 @@ export async function POST(req: Request) {
       path: "/",
     });
     return res;
-  } catch {
-    return NextResponse.json({ error: "Registration failed" }, { status: 500 });
+  } catch(err) {
+    console.error("REGISTRATION ERROR:", err);
+    return NextResponse.json({
+        error: "REGISTRATION ERROR",
+        details: err instanceof Error ? err.message : "Registration failed",
+      }, { status: 500 });
   }
 }
