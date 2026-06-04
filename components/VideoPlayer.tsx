@@ -316,7 +316,7 @@ export default function VideoPlayer() {
       </form>
 
       {/* ── Player + Sidebar ── */}
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="video-player-layout flex flex-col lg:flex-row gap-4">
 
         {/* Player column */}
         <div className="flex-1 min-w-0 space-y-4">

@@ -20,7 +20,7 @@ export function MobileNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 flex sm:hidden h-16 border-t border-border bg-background/95 backdrop-blur-md">
+      <nav className="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-50 flex lg:hidden h-16 border-t border-border bg-background/95 backdrop-blur-md safe-bottom">
         {NAV.map(({ label, icon: Icon, href }) => {
           const active = pathname === href
           return (
