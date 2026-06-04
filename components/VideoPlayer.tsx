@@ -133,7 +133,7 @@ export default function VideoPlayer() {
       const res = await axios.get(`/api/users/${uid}`)
       const ps: PlaylistDoc[] = res.data.playlist || []
 
-      const localList = readLocalJson(LS_PLAYLIST, [])
+      const localList = readLocalJson<{ id: string }[]>(LS_PLAYLIST, [])
 
       if (ps.length === 0) {
         // Create default playlist, optionally seeding from local storage
