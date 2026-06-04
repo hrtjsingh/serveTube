@@ -146,15 +146,24 @@ html.amoled {
 nav.mobile-nav { padding-bottom: env(safe-area-inset-bottom, 0); }
 
 /* Extra bottom space when mini player is visible (mobile nav + mini bar) */
-@media (max-width: 639px) {
+@media (max-width: 1023px) {
   body.has-mini-player {
     padding-bottom: 8rem;
   }
 }
-@media (min-width: 640px) {
-  body.has-mini-player {
-    padding-bottom: 4rem;
-  }
+
+/* PWA standalone: force mobile chrome when viewport was wrong (e.g. 980px) */
+html.pwa-mobile-layout .mobile-bottom-nav {
+  display: flex !important;
+}
+html.pwa-mobile-layout body {
+  padding-bottom: 4rem;
+}
+html.pwa-mobile-layout body.has-mini-player {
+  padding-bottom: 8rem;
+}
+html.pwa-mobile-layout .video-player-layout {
+  flex-direction: column !important;
 }
 
 /* ── Smooth page transitions ── */

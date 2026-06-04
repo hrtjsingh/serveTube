@@ -2,6 +2,7 @@ import { AuthProvider } from '@/context/AuthContext'
 import { PlayerProvider } from '@/context/PlayerContext'
 import { AppThemeProvider } from '@/context/ThemeContext'
 import { GlobalPlayer } from '@/components/GlobalPlayer'
+import { PwaViewportFix } from '@/components/PwaViewportFix'
 import { Header } from '@/components/header'
 import { MobileNav } from '@/components/MobileNav'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -16,6 +17,7 @@ export const viewport: Viewport = {
   themeColor: '#f8bf59',
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export const metadata: Metadata = {
@@ -32,12 +34,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="apple-touch-icon" href="/logo192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5"
+        />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} bg-background flex min-h-full flex-col antialiased pb-16 sm:pb-0`}
+        className={`${geistSans.variable} ${geistMono.variable} bg-background flex min-h-full flex-col antialiased pb-16 lg:pb-0`}
         suppressHydrationWarning
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+          <PwaViewportFix />
           <AuthProvider>
             <PlayerProvider>
               <AppThemeProvider>

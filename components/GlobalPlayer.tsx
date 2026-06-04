@@ -125,7 +125,7 @@ export function GlobalPlayer() {
 
       {showMini && (
         <div
-          className="fixed left-0 right-0 z-[45] border-t border-border bg-card/95 backdrop-blur-md shadow-lg bottom-16 sm:bottom-0"
+          className="fixed left-0 right-0 z-[45] border-t border-border bg-card/95 backdrop-blur-md shadow-lg bottom-16 lg:bottom-0"
           role="region"
           aria-label="Now playing"
         >
