@@ -1,8 +1,8 @@
 'use client'
 import React, { useEffect, useState, useRef, useCallback } from 'react'
-import YouTube from 'react-youtube'
 import List from './List'
 import { useAuth } from '@/context/AuthContext'
+import { usePlayer, extractVideoId } from '@/context/PlayerContext'
 import { PlaylistManager, PlaylistDoc } from './PlaylistManager'
 import axios from 'axios'
 import AuthModal from './AuthModal'
@@ -21,12 +21,6 @@ const lsGet = (k: string, fallback: any = null) => {
   try { return JSON.parse(localStorage.getItem(k) as string) ?? fallback } catch { return fallback }
 }
 const lsSet = (k: string, v: any) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
-
-function extractVideoId(link: string): string {
-  const re = /^(?:(?:https?:)?\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/ \r\n]{11})/
-  const m  = link.match(re)
-  return m ? m[1] : link.length === 11 ? link : ''
-}
 
 function timeAgo(ts: number): string {
   const s = Math.floor((Date.now() - ts) / 1000)
@@ -50,8 +44,8 @@ const DEFAULT_LOCAL: LocalPlaylist = {
 
 export default function VideoPlayer() {
   const { user, isSignedIn, isLoaded } = useAuth()
+  const { videoId, setVideoId, setQueue, setPlayerSlotEl } = usePlayer()
 
-  const [videoId, setVideoId]   = useState('36AKk9A5gH8')
   const [videoURL, setVideoURL] = useState('')
   const [showAuth, setShowAuth] = useState(false)
   const [toast, setToast]       = useState<{ msg: string; type?: string } | null>(null)
@@ -80,6 +74,11 @@ export default function VideoPlayer() {
   const activeList: { id: string }[] = isSignedIn
     ? (dbPlaylists.find(p => p._id === activePlaylistId)?.songs || [])
     : (localPlaylists.find(p => p._id === activeLocalId)?.songs || [])
+
+  const queueKey = activeList.map(v => v.id).join(',')
+  useEffect(() => {
+    setQueue(activeList)
+  }, [queueKey, activeList, setQueue])
 
   const setActiveList = (songs: { id: string }[]) => {
     if (isSignedIn) {
@@ -115,8 +114,11 @@ export default function VideoPlayer() {
     setTimeout(() => setToast(null), 3500)
   }, [])
 
-  const addToHistory = (id: string) =>
-    setHistory(h => [{ id, watchedAt: Date.now() }, ...h.filter(x => x.id !== id)].slice(0, 50))
+  const refreshHistory = () => setHistory(lsGet(LS_HIST, []))
+
+  useEffect(() => {
+    refreshHistory()
+  }, [videoId])
 
   // ── Load user playlists from DB ──────────────────────────────────────────
   const loadUserPlaylists = async () => {
@@ -230,10 +232,10 @@ export default function VideoPlayer() {
     e.preventDefault()
     const id = extractVideoId(videoURL.trim())
     if (!id) { showToast('Invalid YouTube URL or video ID', 'error'); return }
-    setVideoId(id); setVideoURL(''); addToHistory(id)
+    setVideoId(id); setVideoURL('')
   }
 
-  const changeVideo = (id: string) => { setVideoId(id); addToHistory(id) }
+  const changeVideo = (id: string) => setVideoId(id)
 
   const playNext = () => {
     if (!activeList.length) return
@@ -315,13 +317,12 @@ export default function VideoPlayer() {
         {/* Player column */}
         <div className="flex-1 min-w-0 space-y-4">
           <div className="rounded-xl border border-border bg-card overflow-hidden shadow-lg">
-            <div ref={playerRef} className="relative bg-black w-full aspect-video">
+            <div
+              ref={playerRef}
+              className="relative w-full overflow-hidden h-[min(56vh,420px)] min-h-[280px] sm:aspect-video sm:h-auto sm:min-h-0"
+            >
               <div className="absolute -inset-4 opacity-30 blur-3xl bg-gradient-to-br from-yellow-500 via-red-500 to-purple-600 animate-pulse pointer-events-none" />
-              <div className="relative w-full h-full">
-                <YouTube className="w-full h-full" videoId={videoId}
-                  opts={{ width: '100%', height: '100%', playerVars: { autoplay: 1, rel: 0, modestbranding: 1 } }}
-                  onEnd={playNext} />
-              </div>
+              <div ref={setPlayerSlotEl} className="relative w-full h-full bg-black" />
             </div>
             {/* Controls */}
             <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-t border-border">
