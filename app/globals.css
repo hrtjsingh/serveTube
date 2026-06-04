@@ -145,6 +145,18 @@ html.amoled {
 /* ── Mobile nav safe area ── */
 nav.mobile-nav { padding-bottom: env(safe-area-inset-bottom, 0); }
 
+/* Extra bottom space when mini player is visible (mobile nav + mini bar) */
+@media (max-width: 639px) {
+  body.has-mini-player {
+    padding-bottom: 8rem;
+  }
+}
+@media (min-width: 640px) {
+  body.has-mini-player {
+    padding-bottom: 4rem;
+  }
+}
+
 /* ── Smooth page transitions ── */
 main { animation: fadeUp 0.2s ease; }
 @keyframes fadeUp {

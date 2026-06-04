@@ -1,5 +1,7 @@
 import { AuthProvider } from '@/context/AuthContext'
+import { PlayerProvider } from '@/context/PlayerContext'
 import { AppThemeProvider } from '@/context/ThemeContext'
+import { GlobalPlayer } from '@/components/GlobalPlayer'
 import { Header } from '@/components/header'
 import { MobileNav } from '@/components/MobileNav'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -34,11 +36,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${geistSans.variable} ${geistMono.variable} bg-background flex min-h-full flex-col antialiased pb-16 sm:pb-0`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
           <AuthProvider>
-            <AppThemeProvider>
-              <Header />
-              <main className="flex-1">{children}</main>
-              <MobileNav />
-            </AppThemeProvider>
+            <PlayerProvider>
+              <AppThemeProvider>
+                <Header />
+                <main className="flex-1">{children}</main>
+                <GlobalPlayer />
+                <MobileNav />
+              </AppThemeProvider>
+            </PlayerProvider>
           </AuthProvider>
         </ThemeProvider>
         

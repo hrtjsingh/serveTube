@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { usePlayer } from '@/context/PlayerContext'
 import { Play, Trash2, History, Clock } from 'lucide-react'
 
 const LS_HIST = 'servetube_watch_history'
@@ -19,7 +20,10 @@ function timeAgo(ts: number): string {
 
 export default function HistoryPage() {
   const router = useRouter()
+  const { setVideoId } = usePlayer()
   const [history, setHistory] = useState<{ id: string; watchedAt: number }[]>([])
+
+  const playVideo = (id: string) => setVideoId(id)
 
   useEffect(() => { setHistory(lsGet(LS_HIST, [])) }, [])
 
@@ -73,7 +77,7 @@ export default function HistoryPage() {
                 </div>
               </div>
               {/* Info */}
-              <div className="flex-1 min-w-0 cursor-pointer" onClick={() => router.push(`/?v=${h.id}`)}>
+              <div className="flex-1 min-w-0 cursor-pointer" onClick={() => playVideo(h.id)}>
                 <p className="text-sm font-mono font-medium truncate">{h.id}</p>
                 <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                   <Clock size={10} /> {timeAgo(h.watchedAt)}
@@ -82,7 +86,7 @@ export default function HistoryPage() {
               {/* Actions */}
               <div className="flex items-center gap-1.5">
                 <button
-                  onClick={() => router.push(`/?v=${h.id}`)}
+                  onClick={() => playVideo(h.id)}
                   className="flex items-center gap-1 rounded-md bg-[#f8bf59]/10 text-[#f8bf59] border border-[#f8bf59]/30 px-2.5 py-1.5 text-xs font-bold hover:bg-[#f8bf59]/20 transition-colors">
                   <Play size={11} /> Play
                 </button>
