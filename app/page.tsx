@@ -14,8 +14,8 @@ export default function Home() {
           className="h-12 w-auto mx-auto mb-1.5 sm:h-14"
           priority
         />
-        <p className="text-xs sm:text-sm text-muted-foreground">
-          Ad-free YouTube & YouTube Music · Playlists · Local or cloud sync
+        <p className="text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
+          Ad-free, distraction-free YouTube — watch only what you want, not what the algorithm wants.
         </p>
       </div>
       <VideoPlayer />

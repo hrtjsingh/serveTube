@@ -1,77 +1,85 @@
 # ServeTube
 
-> Ad-free YouTube player with multiple playlists, cloud sync, PWA support, and a custom auth system — built with Next.js 15, MongoDB, and Tailwind CSS.
+> **Ad-free, distraction-free YouTube.** Watch only what you want — not what the algorithm wants.
+
+ServeTube is a focused YouTube and YouTube Music player with playlists, no ads, and no recommendation feed. Paste a link, build a queue, and play. No shorts carousel, no “up next” rabbit holes — just the videos you choose.
+
+Built with **Next.js 15**, **MongoDB**, and **Tailwind CSS**.
 
 ---
 
 ## Table of Contents
 
-- [Overview](#overview)
+- [Why ServeTube](#why-servetube)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Environment Variables](#environment-variables)
-  - [Running Locally](#running-locally)
 - [Authentication](#authentication)
 - [Playlists](#playlists)
-- [PWA & Offline Support](#pwa--offline-support)
+- [PWA & Mobile](#pwa--mobile)
 - [Themes](#themes)
 - [API Reference](#api-reference)
 - [Security](#security)
 - [Deployment](#deployment)
-- [Environment Variables Reference](#environment-variables-reference)
+- [Environment Variables](#environment-variables)
 - [Scripts](#scripts)
 
 ---
 
-## Overview
+## Why ServeTube
 
-ServeTube is a full-stack YouTube client that strips ads by embedding videos via the `youtube-nocookie.com` player. It supports multiple named playlists, YouTube playlist import, drag-to-reorder queues, watch history, cloud sync for signed-in users, and full local-storage fallback for guests.
+YouTube is built to keep you watching. ServeTube is built to let you **leave**.
 
-The auth system is completely custom — no Clerk, no Auth0, no third-party dependencies. Email/password with bcrypt hashing and JWT sessions stored in httpOnly cookies.
+| YouTube | ServeTube |
+|---|---|
+| Algorithm feed & recommendations | **Your playlists only** |
+| Ads & sponsored interruptions | **Ad-free** `youtube-nocookie.com` embed |
+| Endless “watch next” suggestions | **Your queue** — play next when *you* want |
+| Account required for saved lists | **Guest mode** — full playlists in local storage |
+| Playback stops when you navigate | **Global player** — music keeps playing across pages |
+
+**Watch only what you want. Not what the algorithm wants.**
 
 ---
 
 ## Features
 
-### Player
-- Plays any YouTube video via URL, share link, or 11-character video ID
-- Ad-free embed using `youtube-nocookie.com`
-- Auto-play next video in queue on end
-- Skip to next / play previous controls
-- Responsive player that fills its container at any screen size
+### Distraction-free player
+- Ad-free playback via `youtube-nocookie.com`
+- Paste any YouTube or **YouTube Music** watch link, or an 11-character video ID
+- **Global player** — one YouTube instance; playback persists when you navigate
+- **Mini player** on other pages; full player on home
+- Auto-play next track in your queue (optional — it's *your* queue)
+- **Resume playback** — continue where you left off or start from the beginning
+- Mobile-friendly player with **landscape fullscreen**
 
-### Playlists
-- **Multiple playlists** — create, name, describe, and color-code unlimited playlists (up to 50 per account)
-- **Drag-to-reorder** — reorder songs within a playlist by dragging
-- **Import from YouTube** — paste any YouTube playlist URL or `PL…` ID to import all videos (requires YouTube Data API key)
-- **Export** — download playlist as JSON or copy all URLs to clipboard
-- **Local storage for guests** — full playlist functionality without an account, stored in the browser
-- **Cloud sync** — sign in to persist playlists in MongoDB; local playlists merge automatically on first login
-- **Manual sync button** — dirty-state tracking with a Sync Now button and last-synced timestamp
+### Your playlists, your rules
+- Multiple named playlists with cover colours and descriptions
+- Drag-to-reorder tracks
+- **Import from YouTube / YouTube Music** — paste a playlist URL (requires API key)
+- Export as JSON or copy URLs to clipboard
+- **Guest local storage** — playlists saved in the browser, no account needed
+- **Cloud sync** — sign in to persist playlists in MongoDB; local data merges on first login
+- Manual sync with dirty-state tracking
 
-### Auth
-- Email and password registration and login
-- Passwords hashed with bcrypt (cost factor 12)
-- Sessions stored in `httpOnly`, `SameSite=Strict` JWT cookies (7-day expiry)
-- No third-party auth provider required
+### Auth & accounts
+- Custom email/password auth — no Clerk, no Auth0
+- bcrypt password hashing, JWT sessions in `httpOnly` cookies
+- Free forever
 
 ### UI / UX
-- **Three themes** — Dark, Light, and AMOLED (true black for OLED screens), persisted across sessions
-- **Mobile bottom navigation bar** — thumb-friendly nav on phones, hidden on desktop
-- **Onboarding tour** — 4-step first-visit walkthrough, shown once, skippable
-- **Watch history** — last 50 videos with timestamps, clearable per item or all at once
-- **Toast notifications** — success, error, and info messages
-- **Profile page** — stats (playlists, videos, watched), quick links, sign out
-- **Settings page** — theme picker, account info, replay onboarding
+- Dark, Light, and AMOLED themes
+- Mobile bottom navigation
+- 4-step onboarding tour
+- Watch history (last 50 videos)
+- Profile and settings pages
+- Toast notifications
 
 ### PWA
-- Installable on Android and iOS ("Add to Home Screen")
-- Service worker with network-first caching for API and cache-first for static assets
-- Offline-capable for playlist data and UI shell
+- Installable on Android and iOS
+- Service worker for fast loads and offline UI shell
+- Mobile viewport fixes for standalone mode
 
 ---
 
@@ -83,11 +91,11 @@ The auth system is completely custom — no Clerk, no Auth0, no third-party depe
 | Language | TypeScript |
 | Styling | Tailwind CSS v4 |
 | Database | MongoDB via Mongoose |
-| Auth | Custom JWT (jose) + bcrypt passwords |
-| Drag & Drop | @dnd-kit/core + @dnd-kit/sortable |
+| Auth | Custom JWT (jose) + bcrypt |
+| Drag & Drop | @dnd-kit |
 | HTTP Client | Axios |
 | Icons | Lucide React |
-| Player | react-youtube |
+| Player | react-youtube (global singleton) |
 | Hosting | Vercel (recommended) |
 
 ---
@@ -97,67 +105,44 @@ The auth system is completely custom — no Clerk, no Auth0, no third-party depe
 ```
 serveTube/
 ├── app/
-│   ├── api/
-│   │   ├── auth/
-│   │   │   ├── login/route.ts        # POST — email/password login
-│   │   │   ├── register/route.ts     # POST — new account creation
-│   │   │   └── me/route.ts           # GET — session check, DELETE — logout
-│   │   ├── playlists/
-│   │   │   ├── add/route.ts          # POST — create playlist
-│   │   │   ├── import-youtube/route.ts # POST — import from YouTube API
-│   │   │   └── [playlistId]/
-│   │   │       ├── update/route.ts   # POST — replace songs array
-│   │   │       ├── rename/route.ts   # PATCH — update name/description/color
-│   │   │       ├── delete/route.ts   # DELETE — remove playlist
-│   │   │       ├── add-song/route.ts # POST — append one video
-│   │   │       └── delete-song/route.ts # DELETE — remove one video
-│   │   └── users/
-│   │       ├── save/route.ts         # GET — fetch current user from DB
-│   │       └── [userId]/route.ts     # GET — fetch user's playlists
-│   ├── history/page.tsx              # Watch history page
-│   ├── playlists/page.tsx            # Playlist grid overview page
-│   ├── profile/page.tsx              # User profile and stats
-│   ├── settings/page.tsx             # Theme, account, onboarding
-│   ├── globals.css                   # Tailwind base + theme variables
-│   ├── layout.tsx                    # Root layout with providers
-│   └── page.tsx                      # Home — URL input + video player
+│   ├── api/                    # Auth, playlists, users
+│   ├── history/page.tsx
+│   ├── playlists/page.tsx
+│   ├── profile/page.tsx
+│   ├── settings/page.tsx
+│   ├── layout.tsx              # Root layout + GlobalPlayer
+│   └── page.tsx                # Home — player + playlists
 │
 ├── components/
-│   ├── AuthModal.tsx                 # Sign in / Register modal
-│   ├── header.tsx                    # Top nav with theme toggle
-│   ├── MobileNav.tsx                 # Fixed bottom nav for mobile
-│   ├── Onboarding.tsx                # First-visit 4-step tour
-│   ├── PlaylistManager.tsx           # Create / edit / import / export playlists
-│   ├── ThemeSwitcher.tsx             # Dark / Light / AMOLED picker
-│   ├── VideoPlayer.tsx               # Main player + queue sidebar
-│   ├── VideoInfo.tsx                 # Playlist row with thumbnail + title
-│   ├── List.tsx                      # Drag-sortable song list wrapper
-│   └── SortableVideoItem.tsx         # Individual draggable song row
+│   ├── GlobalPlayer.tsx        # Persistent YouTube instance + mini player
+│   ├── VideoPlayer.tsx         # Home player UI + playlist sidebar
+│   ├── ResumePlaybackPrompt.tsx
+│   ├── PlaylistManager.tsx
+│   ├── Onboarding.tsx
+│   ├── PwaViewportFix.tsx
+│   ├── MobileNav.tsx
+│   ├── AuthModal.tsx
+│   └── ...
 │
 ├── context/
-│   ├── AuthContext.tsx               # useAuth() hook — user, login, logout
-│   └── ThemeContext.tsx              # useAppTheme() hook — dark/light/amoled
+│   ├── PlayerContext.tsx       # Global playback state
+│   ├── AuthContext.tsx
+│   └── ThemeContext.tsx
 │
 ├── lib/
-│   ├── auth.ts                       # bcrypt hashing + JWT sign/verify
-│   ├── mongodb.ts                    # Mongoose connection with caching
-│   ├── rateLimit.ts                  # In-memory rate limiter with lockout
-│   ├── requireAuth.ts                # JWT cookie guard for API routes
-│   ├── requirePlaylistOwner.ts       # Ownership check for playlist routes
-│   └── validate.ts                   # Input validation and sanitisation
+│   ├── localPlaylists.ts       # Guest playlist localStorage loader
+│   ├── playlistProgress.ts     # Resume position persistence
+│   ├── youtubeUrls.ts          # YouTube + Music URL parsing
+│   ├── mobileFullscreen.ts     # Mobile fullscreen + landscape lock
+│   └── ...
 │
 ├── models/
-│   ├── User.ts                       # name, email, passwordHash
-│   └── Playlist.ts                   # userId, name, description, coverColor, songs[]
+│   ├── User.ts
+│   └── Playlist.ts
 │
-├── public/
-│   ├── manifest.json                 # PWA manifest
-│   └── sw.js                         # Service worker
-│
-├── middleware.ts                     # CORS + cross-origin request blocking
-├── next.config.ts                    # Security headers, CORS, SW headers
-├── .env.example                      # Required environment variables
-└── SECURITY.md                       # Full security audit report
+└── public/
+    ├── manifest.json
+    └── sw.js
 ```
 
 ---
@@ -166,238 +151,194 @@ serveTube/
 
 ### Prerequisites
 
-- Node.js 18 or higher
-- A MongoDB database (free tier at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas))
+- Node.js 18+
+- MongoDB ([MongoDB Atlas](https://www.mongodb.com/cloud/atlas) free tier works)
 - (Optional) YouTube Data API v3 key for playlist import
 
 ### Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/hrtjsingh/serveTube.git
 cd serveTube
-
-# Install dependencies
 npm install
-# or
-yarn install
 ```
 
 ### Environment Variables
-
-Copy the example file and fill in your values:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Then edit `.env.local`:
-
 ```env
-# MongoDB connection string — required
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/servetube
-
-# JWT secret — MUST be at least 32 random characters
-# Generate one with: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 JWT_SECRET=your-long-random-secret-here
-
-# Your app URL — used for CORS origin validation
-# Use http://localhost:3000 for local development
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-
-# YouTube Data API v3 key — optional, only needed for playlist import
-YOUTUBE_API_KEY=your-youtube-api-key
+YOUTUBE_API_KEY=your-youtube-api-key   # optional — playlist import only
 ```
 
-> **Important:** The server will refuse to start if `JWT_SECRET` is missing or shorter than 32 characters. This is intentional — a weak secret lets anyone forge authentication tokens.
+Generate a strong `JWT_SECRET`:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+```
+
+> The server refuses to start if `JWT_SECRET` is missing or shorter than 32 characters.
 
 ### Running Locally
 
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
 ## Authentication
 
-ServeTube uses a fully custom auth system with no third-party providers.
-
-### How it works
-
-1. **Register** — email, name, and password (min 8 chars). Password is hashed with bcrypt (cost factor 12) and stored. A default playlist is created automatically.
-2. **Login** — email and password verified against the bcrypt hash. A signed JWT is issued and stored in an `httpOnly`, `SameSite=Strict` cookie.
-3. **Session** — every protected API route reads the `st_token` cookie and verifies it with `requireAuth()`. The JWT expires after 7 days.
-4. **Logout** — the cookie is cleared server-side via `DELETE /api/auth/me`.
+### Signed-in users
+1. **Register** — email, name, password (min 8 chars). Default playlist created automatically.
+2. **Login** — JWT issued in an `httpOnly`, `SameSite=Strict` cookie (7-day expiry).
+3. **Logout** — `DELETE /api/auth/me` clears the session.
 
 ### Guest mode
-
-Users without an account get a fully functional experience. Playlists and watch history are stored in `localStorage`. On first login, any locally saved videos are automatically merged into the user's cloud playlist.
+No account required. Playlists and watch history live in **local storage**. On first login, local videos merge into your cloud playlist automatically.
 
 ---
 
 ## Playlists
 
-### Creating playlists
+### Create
+Click **New** in the sidebar. Name it, describe it, pick a cover colour.
 
-Click **New** in the playlist sidebar. Give it a name, an optional description, and pick a cover colour from the palette.
+### Import
+1. Click **Import**
+2. Paste a YouTube or YouTube Music playlist URL (`list=…`)
+3. Preview → **Save Playlist**
 
-### Importing from YouTube
+> Requires `YOUTUBE_API_KEY`. Get one at [Google Cloud Console](https://console.cloud.google.com) (YouTube Data API v3).
 
-1. Click **Import** in the playlist sidebar
-2. Paste a YouTube playlist URL (e.g. `https://youtube.com/playlist?list=PL...`) or a bare `PL...` ID
-3. Click **Fetch** — ServeTube will preview the playlist name and video count
-4. Click **Save Playlist** to add it to your account
+### Export
+Download JSON or copy all video URLs to clipboard.
 
-> Requires `YOUTUBE_API_KEY` in your environment. Get one free at [Google Cloud Console](https://console.cloud.google.com) by enabling the YouTube Data API v3.
+### Sync
+Signed-in users get a **Sync Now** button when local changes are pending. Add/remove operations can sync immediately.
 
-### Exporting playlists
-
-Hover over any playlist and click the export icon to either:
-- **Download as JSON** — saves a file with all video IDs and YouTube URLs
-- **Copy URLs** — copies all video URLs to clipboard, one per line
-
-### Syncing to database
-
-When you're signed in, a sync panel appears above the queue. Changes made locally (reordering, adding, removing) mark the playlist as dirty and the **Sync Now** button turns active. Click it to push all changes to MongoDB. Individual add/remove operations sync immediately.
+### Resume
+ServeTube remembers your last track and position per playlist. On return, choose **Continue from last watch** or **Start from beginning**.
 
 ---
 
-## PWA & Offline Support
+## PWA & Mobile
 
-ServeTube is installable as a Progressive Web App on both Android and iOS.
+**Android (Chrome):** Menu → *Add to Home Screen*  
+**iOS (Safari):** Share → *Add to Home Screen*
 
-**On Android (Chrome):** tap the three-dot menu → *Add to Home Screen*  
-**On iOS (Safari):** tap the Share icon → *Add to Home Screen*
-
-Once installed, the app opens in standalone mode (no browser chrome). The service worker caches the UI shell and playlist data so the app loads instantly even on slow connections. API calls are attempted over the network first; if offline, they gracefully degrade.
+- Standalone app mode (no browser chrome)
+- Persistent playback across in-app navigation
+- Mobile fullscreen with landscape lock on supported devices
+- Bottom nav for thumb-friendly browsing
 
 ---
 
 ## Themes
 
-Three themes are available, toggled via the button in the header or the Settings page:
-
 | Theme | Background | Best for |
 |---|---|---|
-| **Dark** | `oklch(0.145 0 0)` — near-black | General use in low light |
-| **Light** | `oklch(1 0 0)` — pure white | Bright environments |
-| **AMOLED** | `oklch(0 0 0)` — true black | OLED screens, maximum battery saving |
+| **Dark** | Near-black | Default, low light |
+| **Light** | White | Bright environments |
+| **AMOLED** | True black | OLED screens, battery saving |
 
-Your preference is persisted in `localStorage` and applied immediately on load with no flash.
+Preference saved in `localStorage`.
 
 ---
 
 ## API Reference
 
-All routes that modify data require a valid session cookie (`st_token`). All playlist routes also verify that the authenticated user owns the target playlist.
+Protected routes require a valid `st_token` session cookie. Playlist routes verify ownership.
 
 ### Auth
 
 | Method | Route | Description |
 |---|---|---|
-| `POST` | `/api/auth/register` | Create account. Body: `{ name, email, password }` |
-| `POST` | `/api/auth/login` | Sign in. Body: `{ email, password }` |
-| `GET` | `/api/auth/me` | Returns current session user or `null` |
-| `DELETE` | `/api/auth/me` | Clears session cookie (logout) |
+| `POST` | `/api/auth/register` | Create account |
+| `POST` | `/api/auth/login` | Sign in |
+| `GET` | `/api/auth/me` | Current session |
+| `DELETE` | `/api/auth/me` | Logout |
 
-**Rate limits:** login is capped at 10 attempts per 15 minutes per IP with a 15-minute lockout. Registration is capped at 5 per hour per IP.
+**Rate limits:** login 10 / 15 min per IP; register 5 / hour per IP.
 
 ### Users
 
 | Method | Route | Description |
 |---|---|---|
-| `GET` | `/api/users/save` | Returns full user document for the session user |
-| `GET` | `/api/users/[userId]` | Returns all playlists for a user (owner only) |
+| `GET` | `/api/users/save` | Current user document |
+| `GET` | `/api/users/[userId]` | User's playlists (owner only) |
 
 ### Playlists
 
 | Method | Route | Description |
 |---|---|---|
-| `POST` | `/api/playlists/add` | Create playlist. Body: `{ name, description?, coverColor?, songs? }` |
-| `POST` | `/api/playlists/import-youtube` | Import from YouTube. Body: `{ url }` |
-| `POST` | `/api/playlists/[id]/update` | Replace entire songs array. Body: `{ songs: [{id}] }` |
-| `PATCH` | `/api/playlists/[id]/rename` | Update metadata. Body: `{ name?, description?, coverColor? }` |
-| `DELETE` | `/api/playlists/[id]/delete` | Delete playlist permanently |
-| `POST` | `/api/playlists/[id]/add-song` | Append one video. Body: `{ id: "videoId" }` |
-| `DELETE` | `/api/playlists/[id]/delete-song` | Remove one video. Body: `{ id: "videoId" }` |
+| `POST` | `/api/playlists/add` | Create playlist |
+| `POST` | `/api/playlists/import-youtube` | Import from YouTube |
+| `POST` | `/api/playlists/[id]/update` | Replace songs array |
+| `PATCH` | `/api/playlists/[id]/rename` | Update metadata |
+| `DELETE` | `/api/playlists/[id]/delete` | Delete playlist |
+| `POST` | `/api/playlists/[id]/add-song` | Add one video |
+| `DELETE` | `/api/playlists/[id]/delete-song` | Remove one video |
 
-**Limits:** max 50 playlists per user, max 500 songs per playlist.
+**Limits:** 50 playlists per user, 500 songs per playlist.
 
 ---
 
 ## Security
 
-A full end-to-end security audit was performed against OWASP Top 10. 19 vulnerabilities were identified and fixed across all severity levels.
+Full OWASP-oriented audit in [SECURITY.md](./SECURITY.md).
 
-### Summary of fixes
+- JWT auth on all protected routes
+- IDOR prevention via `requirePlaylistOwner`
+- Input validation and sanitisation
+- Rate limiting with lockout
+- Security headers (CSP, HSTS, X-Frame-Options, etc.)
 
-| Severity | Count | Examples |
-|---|---|---|
-| Critical | 5 | IDOR on all playlist routes, unawaited auth check, SHA-256 → bcrypt |
-| High | 6 | Brute force, NoSQL injection, no input validation, no resource limits |
-| Medium | 6 | No security headers, stack traces in errors, CSRF, CSS injection |
-| Low | 4 | Password length, email validation, session duration, account lockout |
+### Production checklist
 
-### Security architecture
-
-- **`lib/requireAuth.ts`** — verifies the JWT cookie on every protected route
-- **`lib/requirePlaylistOwner.ts`** — IDOR prevention: asserts `playlist.userId === token.id`
-- **`lib/validate.ts`** — centralised input validation: video IDs, ObjectIds, hex colours, strings
-- **`lib/rateLimit.ts`** — in-memory rate limiter with per-key lockout windows
-- **`next.config.ts`** — full security header suite: CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy, COOP, CORP
-- **`middleware.ts`** — blocks cross-origin mutating requests at the edge
-
-See [SECURITY.md](./SECURITY.md) for the full audit report with every vulnerability, root cause, and fix applied.
-
-### Production hardening checklist
-
-- [ ] Set `JWT_SECRET` to a 48+ character random string (`node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`)
-- [ ] Set `NEXT_PUBLIC_APP_URL` to your exact production domain
-- [ ] Enable MongoDB Atlas IP access list — whitelist only your server IP
-- [ ] Enable MongoDB Atlas audit logging
-- [ ] Set up Cloudflare or Vercel WAF in front of the app
-- [ ] Replace in-memory rate limiter with Redis (e.g. [Upstash](https://upstash.com)) if deploying multiple instances
-- [ ] Rotate `JWT_SECRET` periodically (invalidates all active sessions)
+- [ ] Strong `JWT_SECRET` (48+ random chars)
+- [ ] `NEXT_PUBLIC_APP_URL` set to production domain
+- [ ] MongoDB Atlas IP whitelist
+- [ ] WAF (Cloudflare / Vercel)
+- [ ] Redis rate limiter for multi-instance deploys
 
 ---
 
 ## Deployment
 
-### Deploy to Vercel (recommended)
+### Vercel (recommended)
 
-1. Push your repository to GitHub
-2. Import the project at [vercel.com/new](https://vercel.com/new)
-3. Add environment variables in the Vercel dashboard:
-   - `MONGODB_URI`
-   - `JWT_SECRET`
-   - `NEXT_PUBLIC_APP_URL` (set to your Vercel deployment URL)
-   - `YOUTUBE_API_KEY` (optional)
+1. Push to GitHub
+2. Import at [vercel.com/new](https://vercel.com/new)
+3. Set `MONGODB_URI`, `JWT_SECRET`, `NEXT_PUBLIC_APP_URL`, optional `YOUTUBE_API_KEY`
 4. Deploy
 
-### Deploy to any Node.js host
+### Node.js host
 
 ```bash
 npm run build
 npm run start
 ```
 
-The app requires Node.js 18+ and outbound HTTPS access to MongoDB Atlas and (optionally) the YouTube Data API.
+Requires Node.js 18+ and HTTPS access to MongoDB (and optionally YouTube Data API).
 
 ---
 
-## Environment Variables Reference
+## Environment Variables
 
 | Variable | Required | Description |
 |---|---|---|
-| `MONGODB_URI` | ✅ Yes | MongoDB connection string |
-| `JWT_SECRET` | ✅ Yes | Min 32-char random string for signing JWTs |
-| `NEXT_PUBLIC_APP_URL` | ✅ Yes | Full URL of deployed app (e.g. `https://servetube.vercel.app`) |
-| `YOUTUBE_API_KEY` | Optional | YouTube Data API v3 key — enables playlist import |
+| `MONGODB_URI` | Yes | MongoDB connection string |
+| `JWT_SECRET` | Yes | Min 32-char secret for JWT signing |
+| `NEXT_PUBLIC_APP_URL` | Yes | App URL for CORS (e.g. `https://servetube.vercel.app`) |
+| `YOUTUBE_API_KEY` | No | Enables playlist import |
 
 ---
 
@@ -405,10 +346,10 @@ The app requires Node.js 18+ and outbound HTTPS access to MongoDB Atlas and (opt
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Start development server with Turbopack |
-| `npm run build` | Build production bundle |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
+| `npm run dev` | Dev server (Turbopack) |
+| `npm run build` | Production build |
+| `npm run start` | Production server |
+| `npm run lint` | ESLint |
 
 ---
 

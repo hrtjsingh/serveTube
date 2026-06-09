@@ -9,9 +9,7 @@ import {
 } from 'lucide-react'
 import AuthModal from '@/components/AuthModal'
 
-import { readLocalJson } from '@/lib/storage'
-
-const LS_PLAYLISTS = 'servetube_local_playlists'
+import { loadLocalPlaylistsFromStorage } from '@/lib/localPlaylists'
 
 export default function PlaylistsPage() {
   const { user, isSignedIn, isLoaded } = useAuth()
@@ -23,7 +21,8 @@ export default function PlaylistsPage() {
   useEffect(() => {
     if (!isLoaded) return
     if (!isSignedIn) {
-      setPlaylists(readLocalJson(LS_PLAYLISTS, []))
+      const { playlists } = loadLocalPlaylistsFromStorage()
+      setPlaylists(playlists as PlaylistDoc[])
       setLoading(false)
       return
     }

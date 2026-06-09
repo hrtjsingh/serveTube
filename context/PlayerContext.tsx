@@ -158,21 +158,22 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       if (resumeOfferedRef.current || !currentQueue.length) return
 
       const saved = pendingProgressRef.current
-      if (
-        !saved ||
-        saved.playlistId !== session.playlistId ||
-        saved.source !== session.source
-      ) {
+      const hasMatchingSaved =
+        !!saved &&
+        saved.playlistId === session.playlistId &&
+        saved.source === session.source &&
+        currentQueue.some(item => item.id === saved.videoId)
+
+      resumeOfferedRef.current = true
+
+      if (hasMatchingSaved && saved) {
+        setResumePrompt(saved)
         return
       }
 
-      const trackIndex = currentQueue.findIndex(item => item.id === saved.videoId)
-      if (trackIndex < 0) return
-
-      resumeOfferedRef.current = true
-      setResumePrompt(saved)
+      startPlayback(currentQueue[0].id, 0)
     },
-    []
+    [startPlayback]
   )
 
   const confirmResumePlayback = useCallback(() => {

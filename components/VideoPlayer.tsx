@@ -12,11 +12,16 @@ import {
   Loader2, WifiOff, Clock
 } from 'lucide-react'
 import { readLocalJson, writeLocalJson } from '@/lib/storage'
+import {
+  DEFAULT_LOCAL_PLAYLIST,
+  LS_PLAYLIST_LEGACY,
+  LS_PLAYLISTS,
+  loadLocalPlaylistsFromStorage,
+  type LocalPlaylist,
+} from '@/lib/localPlaylists'
 import { readPlaylistProgress } from '@/lib/playlistProgress'
 
-const LS_PLAYLIST  = 'servetube_local_playlist'
-const LS_HIST      = 'servetube_watch_history'
-const LS_PLAYLISTS = 'servetube_local_playlists'
+const LS_HIST = 'servetube_watch_history'
 
 function timeAgo(ts: number): string {
   const s = Math.floor((Date.now() - ts) / 1000)
@@ -25,17 +30,6 @@ function timeAgo(ts: number): string {
   const m = Math.floor(s / 60)
   if (m < 60) return `${m}m ago`
   return `${Math.floor(m / 60)}h ago`
-}
-
-// ── Guest local playlist shape ────────────────────────────────────────────
-interface LocalPlaylist {
-  _id: string; name: string; description: string
-  coverColor: string; songs: { id: string }[]; isDefault: boolean
-}
-
-const DEFAULT_LOCAL: LocalPlaylist = {
-  _id: 'local-default', name: 'My Playlist', description: '',
-  coverColor: '#f8bf59', songs: [], isDefault: true,
 }
 
 const EMPTY_SONGS: { id: string }[] = []
@@ -53,6 +47,7 @@ export default function VideoPlayer() {
     setPlaylistsReady,
     playlistsReady,
     playerCanMount,
+    resumePrompt,
     trackNumber,
     trackTotal,
   } = usePlayer()
@@ -72,31 +67,28 @@ export default function VideoPlayer() {
   const initialLoadDone = useRef(false)
 
   // ── Guest local playlist state (defaults until client hydration) ─────────
-  const [localPlaylists, setLocalPlaylists] = useState<LocalPlaylist[]>([DEFAULT_LOCAL])
-  const [activeLocalId, setActiveLocalId]   = useState<string>('local-default')
+  const [localPlaylists, setLocalPlaylists] = useState<LocalPlaylist[]>([DEFAULT_LOCAL_PLAYLIST])
+  const [activeLocalId, setActiveLocalId]   = useState<string>(DEFAULT_LOCAL_PLAYLIST._id)
   const [history, setHistory]               = useState<{ id: string; watchedAt: number }[]>([])
   const [storageReady, setStorageReady]     = useState(false)
   const [authPlaylistsLoading, setAuthPlaylistsLoading] = useState(false)
 
-  useEffect(() => {
-    const saved = readLocalJson(LS_PLAYLISTS, [DEFAULT_LOCAL])
-    const playlists = saved.length ? saved : [DEFAULT_LOCAL]
-    const progress = readPlaylistProgress()
-    let activeId = playlists[0]?._id || 'local-default'
-    if (progress?.source === 'local') {
-      const match = playlists.find(p => p._id === progress.playlistId)
-      if (match) activeId = match._id
-    }
+  const hydrateGuestPlaylists = useCallback(() => {
+    const { playlists, activeId } = loadLocalPlaylistsFromStorage()
     setLocalPlaylists(playlists)
     setActiveLocalId(activeId)
-    setHistory(readLocalJson(LS_HIST, []))
-    setStorageReady(true)
+    return { playlists, activeId }
   }, [])
 
   useEffect(() => {
-    if (!isLoaded) return
-    if (isSignedIn) return
-    if (storageReady) setPlaylistsReady(true)
+    hydrateGuestPlaylists()
+    setHistory(readLocalJson(LS_HIST, []))
+    setStorageReady(true)
+  }, [hydrateGuestPlaylists])
+
+  useEffect(() => {
+    if (!isLoaded || isSignedIn || !storageReady) return
+    setPlaylistsReady(true)
   }, [isLoaded, isSignedIn, storageReady, setPlaylistsReady])
 
   // ── Active song list (derived) ───────────────────────────────────────────
@@ -154,15 +146,13 @@ export default function VideoPlayer() {
     if (!isLoaded) return
     setPlaylistsReady(false)
     if (!isSignedIn) {
-      const saved = readLocalJson(LS_PLAYLISTS, [DEFAULT_LOCAL])
-      setLocalPlaylists(saved.length ? saved : [DEFAULT_LOCAL])
-      setActiveLocalId(saved[0]?._id || 'local-default')
+      hydrateGuestPlaylists()
       initialLoadDone.current = false
       if (storageReady) setPlaylistsReady(true)
     } else {
       loadUserPlaylists()
     }
-  }, [isLoaded, isSignedIn, storageReady, setPlaylistsReady])
+  }, [isLoaded, isSignedIn, storageReady, setPlaylistsReady, hydrateGuestPlaylists])
 
   const showToast = useCallback((msg: string, type = 'info') => {
     setToast({ msg, type })
@@ -185,7 +175,7 @@ export default function VideoPlayer() {
       const res = await axios.get(`/api/users/${uid}`)
       const ps: PlaylistDoc[] = res.data.playlist || []
 
-      const localList = readLocalJson<{ id: string }[]>(LS_PLAYLIST, [])
+      const localList = readLocalJson<{ id: string }[]>(LS_PLAYLIST_LEGACY, [])
 
       if (ps.length === 0) {
         // Create default playlist, optionally seeding from local storage
@@ -198,7 +188,7 @@ export default function VideoPlayer() {
         setDbPlaylists([created])
         setActivePlaylistId(created._id)
         setLastSynced(Date.now()); setIsDirty(false)
-        if (localList.length) writeLocalJson(LS_PLAYLIST, [])
+        if (localList.length) writeLocalJson(LS_PLAYLIST_LEGACY, [])
       } else {
         // Merge local list into first playlist
         const first = ps[0]
@@ -209,7 +199,7 @@ export default function VideoPlayer() {
         if (localList.length) {
           await axios.post(`/api/playlists/${first._id}/update`, { songs: merged })
           ps[0] = { ...first, songs: merged }
-          writeLocalJson(LS_PLAYLIST, [])
+          writeLocalJson(LS_PLAYLIST_LEGACY, [])
         }
         initialLoadDone.current = true
         const progress = readPlaylistProgress()
@@ -320,6 +310,15 @@ export default function VideoPlayer() {
 
   const alreadyInList = activeList.some((v: any) => v.id === videoId)
 
+  const isPlayerLoading =
+    !isLoaded ||
+    !storageReady ||
+    (isSignedIn ? authPlaylistsLoading : !playlistsReady) ||
+    (playlistsReady &&
+      !resumePrompt &&
+      activeList.length > 0 &&
+      !playerCanMount)
+
   // ── Playlist manager callbacks ────────────────────────────────────────────
   const handlePlaylistCreated = (p: PlaylistDoc) => {
     setDbPlaylists(ps => [...ps, p])
@@ -348,7 +347,7 @@ export default function VideoPlayer() {
   const deleteLocalPlaylist = (id: string) => {
     const remaining = localPlaylists.filter(p => p._id !== id)
     if (!remaining.length) {
-      const def = { ...DEFAULT_LOCAL }
+      const def = { ...DEFAULT_LOCAL_PLAYLIST }
       setLocalPlaylists([def]); writeLocalJson(LS_PLAYLISTS, [def]); setActiveLocalId(def._id)
     } else {
       setLocalPlaylists(remaining); writeLocalJson(LS_PLAYLISTS, remaining)
@@ -397,13 +396,13 @@ export default function VideoPlayer() {
             >
               <div className="absolute -inset-4 opacity-30 blur-3xl bg-gradient-to-br from-yellow-500 via-red-500 to-purple-600 animate-pulse pointer-events-none" />
               <div ref={setPlayerSlotEl} className="relative w-full h-full bg-black">
-                {(!isLoaded || (isSignedIn ? authPlaylistsLoading : !playlistsReady)) && (
+                {isPlayerLoading && (
                   <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-black/80 text-muted-foreground">
                     <Loader2 size={28} className="animate-spin text-[#f8bf59]" />
                     <span className="text-sm">Loading playlist…</span>
                   </div>
                 )}
-                {playlistsReady && !playerCanMount && (
+                {playlistsReady && !resumePrompt && activeList.length === 0 && !playerCanMount && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center px-4 text-center text-sm text-muted-foreground">
                     Pick a video from your playlist or paste a link above
                   </div>
