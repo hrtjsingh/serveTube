@@ -2,6 +2,7 @@ import { AuthProvider } from '@/context/AuthContext'
 import { PlayerProvider } from '@/context/PlayerContext'
 import { AppThemeProvider } from '@/context/ThemeContext'
 import { GlobalPlayer } from '@/components/GlobalPlayer'
+import { ResumePlaybackPrompt } from '@/components/ResumePlaybackPrompt'
 import { PwaViewportFix } from '@/components/PwaViewportFix'
 import { Header } from '@/components/header'
 import { MobileNav } from '@/components/MobileNav'
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Header />
                 <main className="flex-1">{children}</main>
                 <GlobalPlayer />
+                <ResumePlaybackPrompt />
                 <MobileNav />
               </AppThemeProvider>
             </PlayerProvider>
