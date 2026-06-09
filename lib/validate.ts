@@ -48,6 +48,10 @@ export function isValidObjectId(id: unknown): boolean {
   return typeof id === "string" && /^[a-f\d]{24}$/i.test(id);
 }
 
+export function isValidPlaylistId(id: unknown): boolean {
+  return typeof id === "string" && /^[A-Za-z][A-Za-z0-9_-]{9,127}$/.test(id);
+}
+
 export function sanitizeSongs(raw: unknown): { id: string }[] | null {
   if (!Array.isArray(raw)) return null;
   if (raw.length > LIMITS.SONGS_MAX) return null;

@@ -16,7 +16,15 @@ export async function POST(
   if (own.error) return own.error;
 
   try {
-    const body = await req.json().catch(() => null);
+    const raw = await req.json().catch(() => null);
+    let body: { id?: unknown } | null = raw;
+    if (typeof raw === "string") {
+      try {
+        body = JSON.parse(raw);
+      } catch {
+        body = null;
+      }
+    }
 
     // H2 FIX: strictly validate YouTube video ID format
     if (!body || !isValidVideoId(body.id)) {
