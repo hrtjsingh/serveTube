@@ -1,32 +1,36 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// M3 FIX: CSRF double-submit cookie pattern for state-mutating API calls
-// M6 FIX: Block cross-origin API requests
+// M3/M6: Block cross-origin mutating API requests (SameSite cookies + Origin/Referer check)
 export function middleware(request: NextRequest) {
-  const { pathname, origin } = request.nextUrl;
-  const res = NextResponse.next();
+  const { pathname } = request.nextUrl;
 
-  // Only check API routes that mutate state
-  if (pathname.startsWith("/api/") && !pathname.startsWith("/api/auth/me")) {
-    const method = request.method;
-
-    // M6 FIX: Reject requests with unexpected Origin headers on mutating methods
-    if (["POST", "PATCH", "DELETE", "PUT"].includes(method)) {
-      const requestOrigin = request.headers.get("origin");
-      const appUrl        = process.env.NEXT_PUBLIC_APP_URL || "";
-
-      if (requestOrigin && appUrl && requestOrigin !== appUrl) {
-        // Allow same-origin (no Origin header) and configured app URL
-        return NextResponse.json(
-          { error: "Cross-origin request blocked" },
-          { status: 403 }
-        );
-      }
-    }
+  if (!pathname.startsWith("/api/")) {
+    return NextResponse.next();
   }
 
-  return res;
+  const method = request.method;
+  if (!["POST", "PATCH", "DELETE", "PUT"].includes(method)) {
+    return NextResponse.next();
+  }
+
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
+  if (!appUrl) {
+    return NextResponse.next();
+  }
+
+  const requestOrigin = request.headers.get("origin");
+  const referer = request.headers.get("referer");
+
+  if (requestOrigin && requestOrigin !== appUrl) {
+    return NextResponse.json({ error: "Cross-origin request blocked" }, { status: 403 });
+  }
+
+  if (process.env.NODE_ENV === "production" && !requestOrigin && referer && !referer.startsWith(appUrl)) {
+    return NextResponse.json({ error: "Cross-origin request blocked" }, { status: 403 });
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {

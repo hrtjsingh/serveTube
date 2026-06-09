@@ -49,15 +49,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, playlist }, { status: 201 });
-  } catch (err) {
-    console.error("CREATE PLAYLIST ERROR:", err);
-
-    return NextResponse.json(
-      {
-        error: "Failed to create playlist",
-        details: err instanceof Error ? err.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+  } catch {
+    return NextResponse.json({ error: "Failed to create playlist" }, { status: 500 });
   }
 }

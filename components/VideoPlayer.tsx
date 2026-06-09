@@ -245,7 +245,7 @@ export default function VideoPlayer() {
     const updated = [...activeList, { id: videoId }]
     setActiveList(updated)
     if (isSignedIn && activePlaylistId) {
-      axios.post(`/api/playlists/${activePlaylistId}/add-song`, JSON.stringify({ id: videoId }))
+      axios.post(`/api/playlists/${activePlaylistId}/add-song`, { id: videoId })
         .then(r => {
           setDbPlaylists(ps => ps.map(p => p._id === activePlaylistId ? r.data.playlist : p))
           setIsDirty(false); setLastSynced(Date.now())

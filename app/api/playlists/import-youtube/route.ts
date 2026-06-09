@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/requireAuth";
 import { checkRateLimit, API_LIMIT, getClientIp } from "@/lib/rateLimit";
-import { LIMITS } from "@/lib/validate";
+import { isValidPlaylistId, LIMITS } from "@/lib/validate";
 import { extractPlaylistId } from "@/lib/youtubeUrls";
 
 export async function POST(req: Request) {
@@ -21,8 +21,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "URL required" }, { status: 400 });
     }
 
-    const playlistId = extractPlaylistId(body.url.trim());
-    if (!playlistId) {
+    const url = body.url.trim();
+    if (url.length > 2048) {
+      return NextResponse.json({ error: "URL too long" }, { status: 400 });
+    }
+
+    const playlistId = extractPlaylistId(url);
+    if (!playlistId || !isValidPlaylistId(playlistId)) {
       return NextResponse.json(
         { error: "Invalid YouTube or YouTube Music playlist URL or ID" },
         { status: 400 }
