@@ -39,7 +39,17 @@ const DEFAULT_LOCAL: LocalPlaylist = {
 
 export default function VideoPlayer() {
   const { user, isSignedIn, isLoaded } = useAuth()
-  const { videoId, videoTitle, titleLoading, setVideoId, setQueue, setPlayerSlotEl } = usePlayer()
+  const {
+    videoId,
+    videoTitle,
+    titleLoading,
+    setVideoId,
+    setQueue,
+    setPlayerSlotEl,
+    setPlaylistSession,
+    trackNumber,
+    trackTotal,
+  } = usePlayer()
 
   const [videoURL, setVideoURL] = useState('')
   const [showAuth, setShowAuth] = useState(false)
@@ -77,9 +87,22 @@ export default function VideoPlayer() {
     : (localPlaylists.find(p => p._id === activeLocalId)?.songs || [])
 
   const queueKey = activeList.map(v => v.id).join(',')
+  const activePlaylistKey = isSignedIn ? activePlaylistId : activeLocalId
+
   useEffect(() => {
     setQueue(activeList)
   }, [queueKey, activeList, setQueue])
+
+  useEffect(() => {
+    if (!activePlaylistKey || !activeList.length) {
+      setPlaylistSession(null)
+      return
+    }
+    setPlaylistSession({
+      playlistId: activePlaylistKey,
+      source: isSignedIn ? 'auth' : 'local',
+    })
+  }, [activePlaylistKey, queueKey, isSignedIn, activeList.length, setPlaylistSession])
 
   const setActiveList = (songs: { id: string }[]) => {
     if (isSignedIn) {
@@ -338,13 +361,20 @@ export default function VideoPlayer() {
             </div>
             {/* Controls */}
             <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-t border-border">
-              <p className="text-sm font-medium leading-snug line-clamp-2 min-w-0 flex-1">
-                {titleLoading ? (
-                  <span className="text-muted-foreground text-xs">Loading title…</span>
-                ) : (
-                  videoTitle
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium leading-snug line-clamp-2">
+                  {titleLoading ? (
+                    <span className="text-muted-foreground text-xs">Loading title…</span>
+                  ) : (
+                    videoTitle
+                  )}
+                </p>
+                {trackNumber && trackTotal > 1 && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Track {trackNumber} of {trackTotal}
+                  </p>
                 )}
-              </p>
+              </div>
               <div className="ml-auto flex items-center gap-2">
                 <button onClick={() => setSidebarOpen(s => !s)}
                   className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"

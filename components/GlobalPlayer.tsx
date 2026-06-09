@@ -29,8 +29,14 @@ export function GlobalPlayer() {
     hasStarted,
     playerSlotRef,
     homeSlotReady,
+    ytPlayer,
     setYtPlayer,
     markPlayerActive,
+    seekPosition,
+    clearSeekPosition,
+    persistProgress,
+    trackNumber,
+    trackTotal,
   } = usePlayer()
 
   const playerContainerRef = useRef<HTMLDivElement>(null)
@@ -94,6 +100,27 @@ export function GlobalPlayer() {
     return () => document.body.classList.remove('has-mini-player')
   }, [showMini])
 
+  useEffect(() => {
+    if (seekPosition == null || !ytPlayer) return
+    ytPlayer.seekTo(seekPosition, true)
+    clearSeekPosition()
+  }, [seekPosition, ytPlayer, clearSeekPosition, videoId])
+
+  useEffect(() => {
+    if (!hasStarted) return
+
+    const tick = () => persistProgress()
+    const interval = window.setInterval(tick, 5000)
+    const onUnload = () => tick()
+    window.addEventListener('beforeunload', onUnload)
+
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener('beforeunload', onUnload)
+      tick()
+    }
+  }, [hasStarted, persistProgress, videoId])
+
   return (
     <>
       <div
@@ -146,7 +173,11 @@ export function GlobalPlayer() {
               onClick={() => router.push('/')}
               className="flex-1 min-w-0 text-left"
             >
-              <p className="text-xs text-muted-foreground">Now playing</p>
+              <p className="text-xs text-muted-foreground">
+                {trackNumber && trackTotal > 1
+                  ? `Track ${trackNumber} of ${trackTotal}`
+                  : 'Now playing'}
+              </p>
               <p className="text-sm font-medium truncate">
                 {titleLoading ? 'Loading…' : videoTitle}
               </p>
