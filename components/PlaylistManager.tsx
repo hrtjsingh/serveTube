@@ -6,6 +6,7 @@ import {
   Link2, FileDown, ListVideo
 } from 'lucide-react'
 import axios from 'axios'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 export interface PlaylistDoc {
   _id: string
@@ -300,9 +301,9 @@ export function PlaylistManager({
   const [editTarget, setEditTarget]     = useState<PlaylistDoc | null>(null)
   const [exportTarget, setExportTarget] = useState<PlaylistDoc | null>(null)
   const [deleting, setDeleting]         = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<PlaylistDoc | null>(null)
 
   const deletePlaylist = useCallback(async (p: PlaylistDoc) => {
-    if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return
     setDeleting(p._id)
     try {
       await axios.delete(`/api/playlists/${p._id}/delete`)
@@ -312,6 +313,7 @@ export function PlaylistManager({
       showToast('Failed to delete playlist', 'error')
     } finally {
       setDeleting(null)
+      setDeleteTarget(null)
     }
   }, [onDeleted, showToast])
 
@@ -394,7 +396,7 @@ export function PlaylistManager({
                     <Edit3 size={13} />
                   </button>
                   <button
-                    onClick={() => deletePlaylist(p)}
+                    onClick={() => setDeleteTarget(p)}
                     title="Delete" className="rounded p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors">
                     {deleting === p._id
                       ? <Loader2 size={13} className="animate-spin" />
@@ -421,6 +423,21 @@ export function PlaylistManager({
       {modal === 'export' && exportTarget && (
         <ExportModal playlist={exportTarget} onClose={() => { setModal(null); setExportTarget(null) }} />
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Delete playlist?"
+        message={
+          deleteTarget
+            ? `Delete "${deleteTarget.name}"? This cannot be undone.`
+            : ''
+        }
+        confirmText="Delete"
+        variant="danger"
+        loading={!!deleteTarget && deleting === deleteTarget._id}
+        onConfirm={() => deleteTarget && void deletePlaylist(deleteTarget)}
+        onCancel={() => !deleting && setDeleteTarget(null)}
+      />
     </>
   )
 }
