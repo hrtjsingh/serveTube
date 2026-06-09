@@ -50,7 +50,9 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
             {tab === 'login' ? 'Welcome back' : 'Create account'}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {tab === 'login' ? 'Sign in to sync your playlist across devices.' : 'Join ServeTube — free forever.'}
+            {tab === 'login'
+              ? 'Sign in to sync your playlists across devices.'
+              : 'Join ServeTube — ad-free YouTube, free forever.'}
           </p>
         </div>
 

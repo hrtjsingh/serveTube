@@ -13,18 +13,13 @@ import {
   unlockLandscape,
 } from '@/lib/mobileFullscreen'
 import type { YtPlayerApi } from '@/lib/playlistProgress'
-
-const HIDDEN_PLAYER_STYLE: React.CSSProperties = {
-  position: 'fixed',
-  top: -9999,
-  left: -9999,
-  width: 1,
-  height: 1,
-  opacity: 0,
-  overflow: 'hidden',
-  pointerEvents: 'none',
-  zIndex: -1,
-}
+import {
+  attachBackgroundKeepalive,
+  BACKGROUND_PLAYER_STYLE,
+  clearMediaSession,
+  HIDDEN_PLAYER_STYLE,
+  syncMediaSession,
+} from '@/lib/backgroundPlayback'
 
 const PSEUDO_FULLSCREEN_STYLE: React.CSSProperties = {
   position: 'fixed',
@@ -67,6 +62,8 @@ export function GlobalPlayer() {
   const playerContainerRef = useRef<HTMLDivElement>(null)
   const ytReadyRef = useRef(false)
   const pendingSeekRef = useRef<number | null>(null)
+  const userPausedRef = useRef(false)
+  const ytPlayerRef = useRef<YtPlayerApi | null>(null)
   const [playerMounted, setPlayerMounted] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [isNativeFullscreen, setIsNativeFullscreen] = useState(false)
@@ -113,7 +110,7 @@ export function GlobalPlayer() {
         zIndex: '20',
       })
     } else {
-      Object.assign(el.style, HIDDEN_PLAYER_STYLE as Record<string, string>)
+      Object.assign(el.style, BACKGROUND_PLAYER_STYLE as Record<string, string>)
     }
   }, [isHome, homeSlotReady, playerSlotRef, isFullscreen, isPseudoFullscreen])
 
@@ -248,6 +245,39 @@ export function GlobalPlayer() {
   }, [ytPlayer, videoId, applyPendingSeek])
 
   useEffect(() => {
+    ytPlayerRef.current = ytPlayer
+  }, [ytPlayer])
+
+  useEffect(() => {
+    if (!hasStarted || !videoId) {
+      clearMediaSession()
+      return
+    }
+
+    syncMediaSession(videoId, videoTitle, {
+      onPlay: () => {
+        userPausedRef.current = false
+        ytPlayerRef.current?.playVideo?.()
+      },
+      onPause: () => {
+        userPausedRef.current = true
+        ytPlayerRef.current?.pauseVideo?.()
+      },
+      onNext: () => playNext(),
+    })
+
+    return () => clearMediaSession()
+  }, [hasStarted, videoId, videoTitle, playNext])
+
+  useEffect(() => {
+    if (!hasStarted) return
+    return attachBackgroundKeepalive(
+      () => ytPlayerRef.current,
+      () => userPausedRef.current
+    )
+  }, [hasStarted])
+
+  useEffect(() => {
     if (!hasStarted) return
 
     const tick = () => persistProgress()
@@ -299,8 +329,11 @@ export function GlobalPlayer() {
               }
             }}
             onStateChange={e => {
-              if (pendingSeekRef.current == null) return
               const state = e.data
+              if (state === 1 || state === 3) userPausedRef.current = false
+              if (state === 2) userPausedRef.current = true
+
+              if (pendingSeekRef.current == null) return
               if (state === 1 || state === 2 || state === 3 || state === 5) {
                 applyPendingSeek(e.target)
               }

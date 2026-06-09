@@ -17,7 +17,9 @@ export default function SettingsPage() {
     <div className="max-w-2xl mx-auto px-4 py-8 pb-24 sm:pb-10 space-y-8">
       <div>
         <h1 className="text-2xl font-extrabold">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">Customize your ServeTube experience</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Ad-free, distraction-free YouTube — your picks, not the algorithm.
+        </p>
       </div>
 
       {/* Theme */}

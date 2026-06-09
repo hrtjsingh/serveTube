@@ -17,6 +17,8 @@ export interface YtPlayerApi {
   getCurrentTime: () => number
   seekTo: (seconds: number, allowSeekAhead: boolean) => void
   getPlayerState?: () => number
+  playVideo?: () => void
+  pauseVideo?: () => void
 }
 
 export function readPlaylistProgress(): SavedPlaylistProgress | null {
