@@ -4,7 +4,15 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import YouTube from 'react-youtube'
 import { usePathname, useRouter } from 'next/navigation'
 import { usePlayer } from '@/context/PlayerContext'
-import { Maximize2, SkipForward } from 'lucide-react'
+import { Maximize2, Minimize2, SkipForward } from 'lucide-react'
+import {
+  enterPlayerFullscreen,
+  exitPlayerFullscreen,
+  isFullscreenActive,
+  lockLandscape,
+  unlockLandscape,
+} from '@/lib/mobileFullscreen'
+import type { YtPlayerApi } from '@/lib/playlistProgress'
 
 const HIDDEN_PLAYER_STYLE: React.CSSProperties = {
   position: 'fixed',
@@ -18,6 +26,21 @@ const HIDDEN_PLAYER_STYLE: React.CSSProperties = {
   zIndex: -1,
 }
 
+const PSEUDO_FULLSCREEN_STYLE: React.CSSProperties = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  width: '100vw',
+  height: '100vh',
+  maxWidth: '100vw',
+  maxHeight: '100vh',
+  opacity: 1,
+  overflow: 'hidden',
+  pointerEvents: 'auto',
+  zIndex: 500,
+  background: '#000',
+}
+
 export function GlobalPlayer() {
   const pathname = usePathname()
   const router = useRouter()
@@ -29,26 +52,52 @@ export function GlobalPlayer() {
     hasStarted,
     playerSlotRef,
     homeSlotReady,
+    ytPlayer,
     setYtPlayer,
     markPlayerActive,
+    seekPosition,
+    clearSeekPosition,
+    playbackStartSec,
+    persistProgress,
+    trackNumber,
+    trackTotal,
+    playerCanMount,
   } = usePlayer()
 
   const playerContainerRef = useRef<HTMLDivElement>(null)
   const ytReadyRef = useRef(false)
+  const pendingSeekRef = useRef<number | null>(null)
   const [playerMounted, setPlayerMounted] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [isNativeFullscreen, setIsNativeFullscreen] = useState(false)
+  const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false)
+
+  const isFullscreen = isNativeFullscreen || isPseudoFullscreen
 
   useEffect(() => {
     setPlayerMounted(true)
+    const mq = window.matchMedia('(max-width: 1023px)')
+    const update = () => setIsMobile(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
   }, [])
 
   const isHome = pathname === '/'
-  const showMini = hasStarted && !isHome
+  const showMini = hasStarted && !isHome && !isFullscreen
   const showOnHome = isHome && homeSlotReady
 
   const syncPlayerPosition = useCallback(() => {
     const el = playerContainerRef.current
     const slot = playerSlotRef.current
     if (!el) return
+
+    if (isFullscreen) {
+      if (isPseudoFullscreen) {
+        Object.assign(el.style, PSEUDO_FULLSCREEN_STYLE as Record<string, string>)
+      }
+      return
+    }
 
     if (isHome && homeSlotReady && slot) {
       const rect = slot.getBoundingClientRect()
@@ -66,14 +115,14 @@ export function GlobalPlayer() {
     } else {
       Object.assign(el.style, HIDDEN_PLAYER_STYLE as Record<string, string>)
     }
-  }, [isHome, homeSlotReady, playerSlotRef])
+  }, [isHome, homeSlotReady, playerSlotRef, isFullscreen, isPseudoFullscreen])
 
   useLayoutEffect(() => {
     syncPlayerPosition()
   }, [syncPlayerPosition])
 
   useEffect(() => {
-    if (!showOnHome) return
+    if (!showOnHome || isFullscreen) return
 
     const slot = playerSlotRef.current
     window.addEventListener('scroll', syncPlayerPosition, true)
@@ -87,40 +136,189 @@ export function GlobalPlayer() {
       window.removeEventListener('resize', syncPlayerPosition)
       ro?.disconnect()
     }
-  }, [showOnHome, syncPlayerPosition, playerSlotRef])
+  }, [showOnHome, syncPlayerPosition, playerSlotRef, isFullscreen])
 
   useEffect(() => {
     document.body.classList.toggle('has-mini-player', showMini)
-    return () => document.body.classList.remove('has-mini-player')
-  }, [showMini])
+    document.body.classList.toggle('player-fullscreen-active', isFullscreen)
+    return () => {
+      document.body.classList.remove('has-mini-player')
+      document.body.classList.remove('player-fullscreen-active')
+    }
+  }, [showMini, isFullscreen])
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      const active = isFullscreenActive(playerContainerRef.current)
+      setIsNativeFullscreen(active)
+      if (!active) {
+        unlockLandscape()
+        setIsPseudoFullscreen(false)
+      }
+    }
+
+    document.addEventListener('fullscreenchange', onFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange)
+  }, [])
+
+  const enterFullscreen = useCallback(async () => {
+    const el = playerContainerRef.current
+    if (!el) return
+
+    try {
+      await enterPlayerFullscreen(el)
+      setIsNativeFullscreen(true)
+    } catch {
+      setIsPseudoFullscreen(true)
+      await lockLandscape()
+    }
+  }, [])
+
+  const exitFullscreen = useCallback(async () => {
+    setIsPseudoFullscreen(false)
+    await exitPlayerFullscreen()
+    setIsNativeFullscreen(false)
+    unlockLandscape()
+  }, [])
+
+  const toggleFullscreen = useCallback(() => {
+    if (isFullscreen) {
+      void exitFullscreen()
+    } else {
+      void enterFullscreen()
+    }
+  }, [isFullscreen, enterFullscreen, exitFullscreen])
+
+  const shouldRenderPlayer = playerMounted && playerCanMount
+
+  const safeSeekTo = useCallback((player: YtPlayerApi, seconds: number) => {
+    if (!player) return false
+    try {
+      player.seekTo(seconds, true)
+      return true
+    } catch {
+      return false
+    }
+  }, [])
+
+  const applyPendingSeek = useCallback(
+    (player: YtPlayerApi): boolean => {
+      const pos = pendingSeekRef.current
+      if (pos == null || pos < 1 || !player) return false
+      if (safeSeekTo(player, pos)) {
+        pendingSeekRef.current = null
+        return true
+      }
+      return false
+    },
+    [safeSeekTo]
+  )
+
+  useEffect(() => {
+    if (!shouldRenderPlayer) {
+      setYtPlayer(null)
+      ytReadyRef.current = false
+    }
+  }, [shouldRenderPlayer, setYtPlayer])
+
+  useEffect(() => {
+    if (seekPosition == null) return
+    pendingSeekRef.current = seekPosition
+    clearSeekPosition()
+  }, [seekPosition, clearSeekPosition])
+
+  useEffect(() => {
+    if (!ytPlayer || pendingSeekRef.current == null) return
+
+    let cancelled = false
+    let attempts = 0
+
+    const trySeek = () => {
+      if (cancelled || pendingSeekRef.current == null || attempts > 40) return
+      attempts += 1
+      if (!applyPendingSeek(ytPlayer)) {
+        window.setTimeout(trySeek, 250)
+      }
+    }
+
+    trySeek()
+    return () => {
+      cancelled = true
+    }
+  }, [ytPlayer, videoId, applyPendingSeek])
+
+  useEffect(() => {
+    if (!hasStarted) return
+
+    const tick = () => persistProgress()
+    const interval = window.setInterval(tick, 5000)
+    const onUnload = () => tick()
+    window.addEventListener('beforeunload', onUnload)
+
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener('beforeunload', onUnload)
+      tick()
+    }
+  }, [hasStarted, persistProgress, videoId])
+
+  const showFullscreenControl =
+    isMobile && playerCanMount && (showOnHome || isFullscreen)
 
   return (
     <>
       <div
         ref={playerContainerRef}
-        className="bg-black"
+        className="servetube-player-shell bg-black"
         style={HIDDEN_PLAYER_STYLE}
-        aria-hidden={!showOnHome}
+        aria-hidden={!showOnHome && !isFullscreen}
       >
-        {playerMounted ? (
+        {shouldRenderPlayer ? (
           <YouTube
             className="w-full h-full"
             videoId={videoId}
             opts={{
               width: '100%',
               height: '100%',
-              playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1, controls: 1 },
+              playerVars: {
+                autoplay: 1,
+                rel: 0,
+                modestbranding: 1,
+                playsinline: 1,
+                controls: 1,
+                fs: isMobile ? 0 : 1,
+                ...(playbackStartSec > 0 ? { start: playbackStartSec } : {}),
+              },
             }}
             onReady={e => {
               setYtPlayer(e.target)
+              applyPendingSeek(e.target)
               if (!ytReadyRef.current) {
                 ytReadyRef.current = true
                 markPlayerActive()
               }
             }}
+            onStateChange={e => {
+              if (pendingSeekRef.current == null) return
+              const state = e.data
+              if (state === 1 || state === 2 || state === 3 || state === 5) {
+                applyPendingSeek(e.target)
+              }
+            }}
             onEnd={playNext}
           />
         ) : null}
+
+        {showFullscreenControl && (
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="absolute bottom-3 right-3 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-black/70 text-white backdrop-blur-sm border border-white/20 hover:bg-black/90 transition-colors"
+            aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+          >
+            {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+          </button>
+        )}
       </div>
 
       {showMini && (
@@ -146,7 +344,11 @@ export function GlobalPlayer() {
               onClick={() => router.push('/')}
               className="flex-1 min-w-0 text-left"
             >
-              <p className="text-xs text-muted-foreground">Now playing</p>
+              <p className="text-xs text-muted-foreground">
+                {trackNumber && trackTotal > 1
+                  ? `Track ${trackNumber} of ${trackTotal}`
+                  : 'Now playing'}
+              </p>
               <p className="text-sm font-medium truncate">
                 {titleLoading ? 'Loading…' : videoTitle}
               </p>

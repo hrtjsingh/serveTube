@@ -166,6 +166,18 @@ html.pwa-mobile-layout .video-player-layout {
   flex-direction: column !important;
 }
 
+/* Mobile player fullscreen */
+.servetube-player-shell:fullscreen,
+.servetube-player-shell:-webkit-full-screen {
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+body.player-fullscreen-active {
+  overflow: hidden;
+}
+
 /* ── Smooth page transitions ── */
 main { animation: fadeUp 0.2s ease; }
 @keyframes fadeUp {

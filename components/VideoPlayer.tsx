@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState, useRef, useCallback } from 'react'
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import List from './List'
 import { useAuth } from '@/context/AuthContext'
 import { usePlayer, extractVideoId, isYouTubeMusicUrl } from '@/context/PlayerContext'
@@ -9,9 +9,10 @@ import AuthModal from './AuthModal'
 import {
   Play, Plus, ListVideo, SkipForward, Trash2,
   AlertCircle, ChevronRight, CloudUpload, CheckCircle2,
-  Loader2, WifiOff, Clock, PanelLeftClose, PanelLeftOpen
+  Loader2, WifiOff, Clock
 } from 'lucide-react'
 import { readLocalJson, writeLocalJson } from '@/lib/storage'
+import { readPlaylistProgress } from '@/lib/playlistProgress'
 
 const LS_PLAYLIST  = 'servetube_local_playlist'
 const LS_HIST      = 'servetube_watch_history'
@@ -37,14 +38,28 @@ const DEFAULT_LOCAL: LocalPlaylist = {
   coverColor: '#f8bf59', songs: [], isDefault: true,
 }
 
+const EMPTY_SONGS: { id: string }[] = []
+
 export default function VideoPlayer() {
   const { user, isSignedIn, isLoaded } = useAuth()
-  const { videoId, videoTitle, titleLoading, setVideoId, setQueue, setPlayerSlotEl } = usePlayer()
+  const {
+    videoId,
+    videoTitle,
+    titleLoading,
+    setVideoId,
+    syncQueueKey,
+    setPlayerSlotEl,
+    setPlaylistSession,
+    setPlaylistsReady,
+    playlistsReady,
+    playerCanMount,
+    trackNumber,
+    trackTotal,
+  } = usePlayer()
 
   const [videoURL, setVideoURL] = useState('')
   const [showAuth, setShowAuth] = useState(false)
   const [toast, setToast]       = useState<{ msg: string; type?: string } | null>(null)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
   const playerRef = useRef<HTMLDivElement>(null)
 
   // ── Auth user playlist state ─────────────────────────────────────────────
@@ -61,25 +76,59 @@ export default function VideoPlayer() {
   const [activeLocalId, setActiveLocalId]   = useState<string>('local-default')
   const [history, setHistory]               = useState<{ id: string; watchedAt: number }[]>([])
   const [storageReady, setStorageReady]     = useState(false)
+  const [authPlaylistsLoading, setAuthPlaylistsLoading] = useState(false)
 
   useEffect(() => {
     const saved = readLocalJson(LS_PLAYLISTS, [DEFAULT_LOCAL])
     const playlists = saved.length ? saved : [DEFAULT_LOCAL]
+    const progress = readPlaylistProgress()
+    let activeId = playlists[0]?._id || 'local-default'
+    if (progress?.source === 'local') {
+      const match = playlists.find(p => p._id === progress.playlistId)
+      if (match) activeId = match._id
+    }
     setLocalPlaylists(playlists)
-    setActiveLocalId(playlists[0]?._id || 'local-default')
+    setActiveLocalId(activeId)
     setHistory(readLocalJson(LS_HIST, []))
     setStorageReady(true)
   }, [])
 
-  // ── Active song list (derived) ───────────────────────────────────────────
-  const activeList: { id: string }[] = isSignedIn
-    ? (dbPlaylists.find(p => p._id === activePlaylistId)?.songs || [])
-    : (localPlaylists.find(p => p._id === activeLocalId)?.songs || [])
-
-  const queueKey = activeList.map(v => v.id).join(',')
   useEffect(() => {
-    setQueue(activeList)
-  }, [queueKey, activeList, setQueue])
+    if (!isLoaded) return
+    if (isSignedIn) return
+    if (storageReady) setPlaylistsReady(true)
+  }, [isLoaded, isSignedIn, storageReady, setPlaylistsReady])
+
+  // ── Active song list (derived) ───────────────────────────────────────────
+  const activeList = useMemo(() => {
+    if (isSignedIn) {
+      return dbPlaylists.find(p => p._id === activePlaylistId)?.songs ?? EMPTY_SONGS
+    }
+    return localPlaylists.find(p => p._id === activeLocalId)?.songs ?? EMPTY_SONGS
+  }, [isSignedIn, dbPlaylists, activePlaylistId, localPlaylists, activeLocalId])
+
+  const queueKey = useMemo(() => activeList.map(v => v.id).join(','), [activeList])
+  const activePlaylistKey = isSignedIn ? activePlaylistId : activeLocalId
+  const lastPlayerSyncRef = useRef('')
+
+  useEffect(() => {
+    const playlistSource = isSignedIn ? 'auth' : 'local'
+    const syncToken = `${activePlaylistKey ?? ''}:${playlistSource}:${queueKey}`
+    if (lastPlayerSyncRef.current === syncToken) return
+    lastPlayerSyncRef.current = syncToken
+
+    syncQueueKey(queueKey)
+
+    if (!activePlaylistKey || !queueKey) {
+      setPlaylistSession(null)
+      return
+    }
+
+    setPlaylistSession({
+      playlistId: activePlaylistKey,
+      source: playlistSource,
+    })
+  }, [activePlaylistKey, queueKey, isSignedIn, syncQueueKey, setPlaylistSession])
 
   const setActiveList = (songs: { id: string }[]) => {
     if (isSignedIn) {
@@ -103,15 +152,17 @@ export default function VideoPlayer() {
   // On auth change
   useEffect(() => {
     if (!isLoaded) return
+    setPlaylistsReady(false)
     if (!isSignedIn) {
       const saved = readLocalJson(LS_PLAYLISTS, [DEFAULT_LOCAL])
       setLocalPlaylists(saved.length ? saved : [DEFAULT_LOCAL])
       setActiveLocalId(saved[0]?._id || 'local-default')
       initialLoadDone.current = false
+      if (storageReady) setPlaylistsReady(true)
     } else {
       loadUserPlaylists()
     }
-  }, [isLoaded, isSignedIn])
+  }, [isLoaded, isSignedIn, storageReady, setPlaylistsReady])
 
   const showToast = useCallback((msg: string, type = 'info') => {
     setToast({ msg, type })
@@ -126,6 +177,7 @@ export default function VideoPlayer() {
 
   // ── Load user playlists from DB ──────────────────────────────────────────
   const loadUserPlaylists = async () => {
+    setAuthPlaylistsLoading(true)
     try {
       const me = await axios.get('/api/users/save')
       if (!me.data.user) return
@@ -160,11 +212,21 @@ export default function VideoPlayer() {
           writeLocalJson(LS_PLAYLIST, [])
         }
         initialLoadDone.current = true
+        const progress = readPlaylistProgress()
+        let activeId = ps[0]._id
+        if (progress?.source === 'auth') {
+          const match = ps.find(p => p._id === progress.playlistId)
+          if (match) activeId = match._id
+        }
         setDbPlaylists(ps)
-        setActivePlaylistId(ps[0]._id)
+        setActivePlaylistId(activeId)
         setLastSynced(Date.now()); setIsDirty(false)
       }
     } catch { showToast('Could not load playlists', 'error') }
+    finally {
+      setAuthPlaylistsLoading(false)
+      setPlaylistsReady(true)
+    }
   }
 
   // ── Sync to DB ───────────────────────────────────────────────────────────
@@ -334,25 +396,37 @@ export default function VideoPlayer() {
               className="relative w-full overflow-hidden h-[min(56vh,420px)] min-h-[280px] sm:aspect-video sm:h-auto sm:min-h-0"
             >
               <div className="absolute -inset-4 opacity-30 blur-3xl bg-gradient-to-br from-yellow-500 via-red-500 to-purple-600 animate-pulse pointer-events-none" />
-              <div ref={setPlayerSlotEl} className="relative w-full h-full bg-black" />
+              <div ref={setPlayerSlotEl} className="relative w-full h-full bg-black">
+                {(!isLoaded || (isSignedIn ? authPlaylistsLoading : !playlistsReady)) && (
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-black/80 text-muted-foreground">
+                    <Loader2 size={28} className="animate-spin text-[#f8bf59]" />
+                    <span className="text-sm">Loading playlist…</span>
+                  </div>
+                )}
+                {playlistsReady && !playerCanMount && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center px-4 text-center text-sm text-muted-foreground">
+                    Pick a video from your playlist or paste a link above
+                  </div>
+                )}
+              </div>
             </div>
             {/* Controls */}
             <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-t border-border">
-              <p className="text-sm font-medium leading-snug line-clamp-2 min-w-0 flex-1">
-                {titleLoading ? (
-                  <span className="text-muted-foreground text-xs">Loading title…</span>
-                ) : (
-                  videoTitle
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium leading-snug line-clamp-2">
+                  {titleLoading ? (
+                    <span className="text-muted-foreground text-xs">Loading title…</span>
+                  ) : (
+                    videoTitle
+                  )}
+                </p>
+                {trackNumber && trackTotal > 1 && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Track {trackNumber} of {trackTotal}
+                  </p>
                 )}
-              </p>
+              </div>
               <div className="ml-auto flex items-center gap-2">
-                <button onClick={() => setSidebarOpen(s => !s)}
-                  className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                  aria-expanded={sidebarOpen}
-                  aria-label={sidebarOpen ? 'Hide playlist' : 'Show playlist'}>
-                  {sidebarOpen ? <PanelLeftClose size={13} /> : <PanelLeftOpen size={13} />}
-                  <span className="lg:hidden">{sidebarOpen ? 'Hide' : 'Playlist'}</span>
-                </button>
                 <button onClick={playNext} disabled={activeList.length < 2}
                   className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30">
                   <SkipForward size={13} /> Next
@@ -400,8 +474,7 @@ export default function VideoPlayer() {
         </div>
 
         {/* ── Sidebar ── */}
-        {sidebarOpen && (
-          <div className="flex w-full lg:w-[360px] xl:w-[400px] flex-shrink-0 flex-col gap-3">
+        <div className="flex w-full lg:w-[360px] xl:w-[400px] flex-shrink-0 flex-col gap-3">
 
             {/* ── Playlist Manager (auth users) ── */}
             {isSignedIn && user && (
@@ -514,7 +587,6 @@ export default function VideoPlayer() {
               </div>
             )}
           </div>
-        )}
       </div>
 
       {/* Toast */}
