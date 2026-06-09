@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePlayer } from '@/context/PlayerContext'
 import { Play, Trash2, History, Clock } from 'lucide-react'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 import { readLocalJson, writeLocalJson } from '@/lib/storage'
 
@@ -22,6 +23,7 @@ export default function HistoryPage() {
   const router = useRouter()
   const { setVideoId } = usePlayer()
   const [history, setHistory] = useState<{ id: string; watchedAt: number }[]>([])
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   const playVideo = (id: string) => setVideoId(id)
 
@@ -43,7 +45,7 @@ export default function HistoryPage() {
           <p className="text-sm text-muted-foreground mt-1">{history.length} videos watched</p>
         </div>
         {history.length > 0 && (
-          <button onClick={clear}
+          <button onClick={() => setShowClearConfirm(true)}
             className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors">
             <Trash2 size={13} /> Clear all
           </button>
@@ -100,6 +102,19 @@ export default function HistoryPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={showClearConfirm}
+        title="Clear watch history?"
+        message="Remove all watched videos from your history? This cannot be undone."
+        confirmText="Clear all"
+        variant="danger"
+        onConfirm={() => {
+          clear()
+          setShowClearConfirm(false)
+        }}
+        onCancel={() => setShowClearConfirm(false)}
+      />
     </div>
   )
 }

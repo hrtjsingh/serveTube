@@ -6,6 +6,8 @@ import { usePlayer, extractVideoId, isYouTubeMusicUrl } from '@/context/PlayerCo
 import { PlaylistManager, PlaylistDoc } from './PlaylistManager'
 import axios from 'axios'
 import AuthModal from './AuthModal'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { PromptDialog } from '@/components/PromptDialog'
 import {
   Play, Plus, ListVideo, SkipForward, Trash2,
   AlertCircle, ChevronRight, CloudUpload, CheckCircle2,
@@ -72,6 +74,9 @@ export default function VideoPlayer() {
   const [history, setHistory]               = useState<{ id: string; watchedAt: number }[]>([])
   const [storageReady, setStorageReady]     = useState(false)
   const [authPlaylistsLoading, setAuthPlaylistsLoading] = useState(false)
+  const [showNewPlaylistPrompt, setShowNewPlaylistPrompt] = useState(false)
+  const [deleteLocalTarget, setDeleteLocalTarget] = useState<LocalPlaylist | null>(null)
+  const [showClearHistoryConfirm, setShowClearHistoryConfirm] = useState(false)
 
   const hydrateGuestPlaylists = useCallback(() => {
     const { playlists, activeId } = loadLocalPlaylistsFromStorage()
@@ -457,7 +462,7 @@ export default function VideoPlayer() {
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Recent</h3>
-                <button onClick={() => { setHistory([]); writeLocalJson(LS_HIST, []) }}
+                <button onClick={() => setShowClearHistoryConfirm(true)}
                   className="text-xs text-muted-foreground hover:text-destructive transition-colors">Clear</button>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -500,10 +505,7 @@ export default function VideoPlayer() {
                     <span className="rounded-full bg-[#f8bf59]/20 text-[#f8bf59] text-xs font-bold px-2 py-0.5">{localPlaylists.length}</span>
                   </span>
                   <button
-                    onClick={() => {
-                      const name = prompt('Playlist name:')
-                      if (name?.trim()) createLocalPlaylist(name.trim())
-                    }}
+                    onClick={() => setShowNewPlaylistPrompt(true)}
                     className="flex items-center gap-1 rounded-md bg-[#f8bf59] px-2 py-1.5 text-xs font-bold text-[#070707] hover:bg-[#ffe49f] transition-colors">
                     <Plus size={12} /> New
                   </button>
@@ -521,7 +523,7 @@ export default function VideoPlayer() {
                       <span className="flex-1 text-sm font-medium truncate">{p.name}</span>
                       <span className="text-xs text-muted-foreground">{p.songs.length}</span>
                       {localPlaylists.length > 1 && (
-                        <button onClick={e => { e.stopPropagation(); deleteLocalPlaylist(p._id) }}
+                        <button onClick={e => { e.stopPropagation(); setDeleteLocalTarget(p) }}
                           className="text-muted-foreground hover:text-red-400 transition-colors p-1">
                           <Trash2 size={12} />
                         </button>
@@ -598,6 +600,50 @@ export default function VideoPlayer() {
       )}
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+
+      <PromptDialog
+        open={showNewPlaylistPrompt}
+        title="New playlist"
+        label="Playlist name"
+        placeholder="My Awesome Playlist"
+        submitText="Create"
+        onSubmit={name => {
+          createLocalPlaylist(name)
+          setShowNewPlaylistPrompt(false)
+        }}
+        onCancel={() => setShowNewPlaylistPrompt(false)}
+      />
+
+      <ConfirmDialog
+        open={!!deleteLocalTarget}
+        title="Delete playlist?"
+        message={
+          deleteLocalTarget
+            ? `Delete "${deleteLocalTarget.name}"? This cannot be undone.`
+            : ''
+        }
+        confirmText="Delete"
+        variant="danger"
+        onConfirm={() => {
+          if (deleteLocalTarget) deleteLocalPlaylist(deleteLocalTarget._id)
+          setDeleteLocalTarget(null)
+        }}
+        onCancel={() => setDeleteLocalTarget(null)}
+      />
+
+      <ConfirmDialog
+        open={showClearHistoryConfirm}
+        title="Clear watch history?"
+        message="Remove all recent videos from your history?"
+        confirmText="Clear"
+        variant="danger"
+        onConfirm={() => {
+          setHistory([])
+          writeLocalJson(LS_HIST, [])
+          setShowClearHistoryConfirm(false)
+        }}
+        onCancel={() => setShowClearHistoryConfirm(false)}
+      />
     </div>
   )
 }
