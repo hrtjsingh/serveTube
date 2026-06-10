@@ -11,7 +11,7 @@ import { PromptDialog } from '@/components/PromptDialog'
 import {
   Play, Plus, ListVideo, SkipForward, Trash2,
   AlertCircle, ChevronRight, CloudUpload, CheckCircle2,
-  Loader2, WifiOff, Clock
+  Loader2, WifiOff, Clock, ArrowUpDown
 } from 'lucide-react'
 import { readLocalJson, writeLocalJson } from '@/lib/storage'
 import {
@@ -267,7 +267,7 @@ export default function VideoPlayer() {
     }
   }
 
-  const updateList = async (list: any) => {
+  const updateList = async (list: { id: string }[]) => {
     setActiveList(list)
     if (isSignedIn && activePlaylistId) {
       try {
@@ -275,6 +275,13 @@ export default function VideoPlayer() {
         setIsDirty(false); setLastSynced(Date.now())
       } catch { setIsDirty(true) }
     }
+  }
+
+  const reverseQueue = () => {
+    if (activeList.length < 2) return
+    const reversed = [...activeList].reverse()
+    void updateList(reversed)
+    showToast('Queue reversed', 'success')
   }
 
   const clearPlaylist = async () => {
@@ -458,7 +465,7 @@ export default function VideoPlayer() {
           )}
 
           {/* Watch History (guests) */}
-          {!isSignedIn && history.length > 0 && (
+          {/* {!isSignedIn && history.length > 0 && (
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Recent</h3>
@@ -474,7 +481,7 @@ export default function VideoPlayer() {
                 ))}
               </div>
             </div>
-          )}
+          )} */}
         </div>
 
         {/* ── Sidebar ── */}
@@ -578,10 +585,17 @@ export default function VideoPlayer() {
                     <span className="text-sm font-bold">Queue</span>
                     <span className="rounded-full bg-[#f8bf59]/20 text-[#f8bf59] text-xs font-bold px-2 py-0.5">{activeList.length}</span>
                   </div>
-                  {/* <button onClick={clearPlaylist}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors">
-                    <Trash2 size={12} /> Clear
-                  </button> */}
+                  <button
+                    type="button"
+                    onClick={reverseQueue}
+                    disabled={activeList.length < 2}
+                    title="Reverse queue order"
+                    aria-label="Reverse queue order"
+                    className="flex items-center gap-1 rounded-md border border-border px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30"
+                  >
+                    <ArrowUpDown size={13} />
+                    <span className="hidden sm:inline">Reverse</span>
+                  </button>
                 </div>
                 <List videoList={activeList} setVideoList={setActiveList} changeVideo={changeVideo}
                   deleteVideo={deleteFromList} playingVideo={videoId} updateList={updateList} />

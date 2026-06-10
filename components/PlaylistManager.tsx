@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react'
 import {
   Plus, Trash2, Edit3, Download, Upload, Copy,
   Check, X, Loader2, Music, ChevronRight, Palette,
-  Link2, FileDown, ListVideo
+  Link2, FileDown, ListVideo, ArrowUpDown
 } from 'lucide-react'
 import axios from 'axios'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
@@ -151,10 +151,11 @@ function ImportModal({
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
   const [preview, setPreview] = useState<{ name: string; songs: { id: string }[]; description: string } | null>(null)
+  const [reverseOrder, setReverseOrder] = useState(false)
 
   const fetchPlaylist = async () => {
     if (!url.trim()) { setError('Paste a YouTube playlist URL'); return }
-    setError(''); setLoading(true); setPreview(null)
+    setError(''); setLoading(true); setPreview(null); setReverseOrder(false)
     try {
       const res = await axios.post('/api/playlists/import-youtube', { url })
       setPreview(res.data)
@@ -170,10 +171,11 @@ function ImportModal({
   const savePlaylist = async () => {
     if (!preview) return
     setLoading(true)
+    const songs = reverseOrder ? [...preview.songs].reverse() : preview.songs
     try {
       const res = await axios.post('/api/playlists/add', {
         userId, name: preview.name, description: preview.description,
-        coverColor: '#ef4444', songs: preview.songs
+        coverColor: '#ef4444', songs
       })
       onCreated(res.data.playlist)
       showToast(`Imported "${preview.name}" (${preview.songs.length} videos) ✓`, 'success')
@@ -196,12 +198,12 @@ function ImportModal({
             className={`${INPUT} flex-1`}
             placeholder="https://music.youtube.com/playlist?list=…"
             value={url}
-            onChange={e => { setUrl(e.target.value); setError(''); setPreview(null) }}
+            onChange={e => { setUrl(e.target.value); setError(''); setPreview(null); setReverseOrder(false) }}
             onKeyDown={e => e.key === 'Enter' && fetchPlaylist()}
           />
-          <button onClick={fetchPlaylist} disabled={loading || !url.trim()} className={BTN_PRIMARY}>
-            {loading ? <Loader2 size={13} className="animate-spin" /> : <Link2 size={13} />}
-          </button>
+            {/* <button onClick={fetchPlaylist} disabled={loading || !url.trim()} className={BTN_PRIMARY}>
+              {loading ? <Loader2 size={13} className="animate-spin" /> : <Link2 size={13} />}
+            </button> */}
         </div>
 
         {error && <p className="text-xs text-red-400 bg-red-400/10 p-2 rounded-lg">{error}</p>}
@@ -220,6 +222,18 @@ function ImportModal({
             {preview.description && (
               <p className="text-xs text-muted-foreground line-clamp-2">{preview.description}</p>
             )}
+            <button
+              type="button"
+              onClick={() => setReverseOrder(v => !v)}
+              className={`flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                reverseOrder
+                  ? 'border-[#f8bf59]/50 bg-[#f8bf59]/15 text-[#f8bf59]'
+                  : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+            >
+              <ArrowUpDown size={13} />
+              {reverseOrder ? 'Reversed — last video plays first' : 'Reverse playlist order'}
+            </button>
           </div>
         )}
 
@@ -385,11 +399,11 @@ export function PlaylistManager({
 
                 {/* Actions — show on hover */}
                 <div className="hidden group-hover:flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
-                  <button
+                  {/* <button
                     onClick={() => { setExportTarget(p); setModal('export') }}
                     title="Export" className="rounded p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
                     <FileDown size={13} />
-                  </button>
+                  </button> */}
                   <button
                     onClick={() => { setEditTarget(p); setModal('edit') }}
                     title="Edit" className="rounded p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
