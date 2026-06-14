@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { Play, ListVideo, CloudUpload, Download, X, ChevronRight, ChevronLeft } from 'lucide-react'
+import { Play, ListVideo, CloudUpload, Download, X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 const STEPS = [
   {
@@ -12,8 +13,8 @@ const STEPS = [
   },
   {
     icon: ListVideo,
-    color: 'text-[#f8bf59]',
-    bg: 'bg-[#f8bf59]/10',
+    color: 'text-brand',
+    bg: 'bg-brand/10',
     title: 'Your playlists, your queue',
     desc: 'Build playlists with only the videos you pick. No recommendations, no endless scroll — just what you added.',
   },
@@ -51,59 +52,47 @@ export function Onboarding() {
   const { icon: Icon, color, bg, title, desc } = STEPS[step]
 
   return (
-    <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl">
-        {/* Progress dots */}
-        <div className="flex items-center justify-between mb-6">
+    <div className="st-modal-overlay z-[500]">
+      <div className="st-modal-panel max-w-sm">
+        <div className="mb-6 flex items-center justify-between">
           <div className="flex gap-1.5">
             {STEPS.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setStep(i)}
+                aria-label={`Go to step ${i + 1}`}
                 className={`h-1.5 rounded-full transition-all ${
-                  i === step ? 'w-6 bg-[#f8bf59]' : 'w-1.5 bg-border'
+                  i === step ? 'w-6 bg-brand' : 'w-1.5 bg-border hover:bg-muted-foreground/30'
                 }`}
               />
             ))}
           </div>
-          <button onClick={finish} className="text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={finish} className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
             <X size={16} />
           </button>
         </div>
 
-        {/* Icon */}
         <div className={`mb-5 inline-flex rounded-2xl p-4 ${bg}`}>
           <Icon size={32} className={color} />
         </div>
 
-        {/* Text */}
-        <h2 className="text-xl font-bold mb-2">{title}</h2>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-6">{desc}</p>
+        <h2 className="mb-2 text-xl font-bold">{title}</h2>
+        <p className="mb-6 text-sm leading-relaxed text-muted-foreground">{desc}</p>
 
-        {/* Actions */}
         <div className="flex gap-3">
           {step > 0 && (
-            <button
-              onClick={() => setStep(s => s - 1)}
-              className="flex items-center gap-1.5 rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
-            >
+            <Button variant="outline" onClick={() => setStep(s => s - 1)}>
               <ChevronLeft size={14} /> Back
-            </button>
+            </Button>
           )}
           {step < STEPS.length - 1 ? (
-            <button
-              onClick={() => setStep(s => s + 1)}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#f8bf59] px-4 py-2.5 text-sm font-bold text-[#070707] hover:bg-[#ffe49f] transition-colors"
-            >
+            <Button variant="brand" onClick={() => setStep(s => s + 1)} className="flex-1">
               Next <ChevronRight size={14} />
-            </button>
+            </Button>
           ) : (
-            <button
-              onClick={finish}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#f8bf59] px-4 py-2.5 text-sm font-bold text-[#070707] hover:bg-[#ffe49f] transition-colors"
-            >
-              Get Started 🎉
-            </button>
+            <Button variant="brand" onClick={finish} className="flex-1">
+              <Sparkles size={14} /> Get Started
+            </Button>
           )}
         </div>
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { Loader2, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -27,53 +28,42 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   if (!open) return null
 
-  const confirmClass =
-    variant === 'danger'
-      ? 'bg-red-500 text-white hover:bg-red-400'
-      : 'bg-[#f8bf59] text-[#070707] hover:bg-[#ffe49f]'
-
   return (
     <div
-      className="fixed inset-0 z-[350] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      className="st-modal-overlay"
       onClick={e => e.target === e.currentTarget && !loading && onCancel()}
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-dialog-title"
     >
-      <div className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+      <div className="st-modal-panel">
         <button
           type="button"
           onClick={onCancel}
           disabled={loading}
-          className="absolute right-4 top-4 rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+          className="absolute right-4 top-4 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
           aria-label="Close"
         >
           <X size={16} />
         </button>
 
-        <h2 id="confirm-dialog-title" className="text-lg font-bold pr-8">
+        <h2 id="confirm-dialog-title" className="pr-8 text-lg font-bold">
           {title}
         </h2>
-        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{message}</p>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{message}</p>
 
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={loading}
-            className="rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
-          >
+          <Button variant="outline" onClick={onCancel} disabled={loading}>
             {cancelText}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant={variant === 'danger' ? 'destructive' : 'brand'}
             onClick={onConfirm}
             disabled={loading}
-            className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50 ${confirmClass}`}
           >
             {loading && <Loader2 size={14} className="animate-spin" />}
             {confirmText}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

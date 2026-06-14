@@ -29,7 +29,7 @@ const List = ({ videoList, changeVideo, deleteVideo, playingVideo, setVideoList,
   };
 
   return (
-    <div className="max-h-[520px] overflow-y-auto overflow-x-hidden p-2 space-y-1">
+    <div className="max-h-[520px] space-y-1 overflow-x-hidden overflow-y-auto scroll-smooth p-2 [mask-image:linear-gradient(to_bottom,transparent,black_8px,black_calc(100%-16px),transparent)]">
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext
           items={videoList.map((v: any) => v.id)}

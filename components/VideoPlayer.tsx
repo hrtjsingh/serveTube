@@ -8,9 +8,12 @@ import axios from 'axios'
 import AuthModal from './AuthModal'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { PromptDialog } from '@/components/PromptDialog'
+import { GuestBanner } from '@/components/ui/guest-banner'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Play, Plus, ListVideo, SkipForward, Trash2,
-  AlertCircle, ChevronRight, CloudUpload, CheckCircle2,
+  CloudUpload, CheckCircle2,
   Loader2, WifiOff, Clock, ArrowUpDown
 } from 'lucide-react'
 import { readLocalJson, writeLocalJson } from '@/lib/storage'
@@ -375,7 +378,7 @@ export default function VideoPlayer() {
     : syncError
     ? 'bg-red-500/20 border-red-500/40 text-red-300 hover:bg-red-500/30'
     : isDirty
-    ? 'bg-[#f8bf59] border-[#f8bf59] text-[#070707] hover:bg-[#ffe49f] shadow-md'
+    ? 'bg-brand border-brand text-brand-foreground hover:bg-brand-hover shadow-md'
     : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25'
 
   return (
@@ -383,17 +386,16 @@ export default function VideoPlayer() {
 
       {/* ── URL bar ── */}
       <form onSubmit={handleSubmit}
-        className="flex flex-col sm:flex-row items-center gap-3 rounded-xl border border-border bg-card p-3 sm:p-4 shadow-sm">
-        <div className="relative flex-1 w-full">
-          <Play size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" placeholder="Paste YouTube or YouTube Music link / video ID…" value={videoURL}
+        className="st-card flex flex-col items-center gap-3 p-3 sm:flex-row sm:p-4">
+        <div className="relative w-full flex-1">
+          {/* <Play size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /> */}
+          <Input type="text" placeholder="Paste YouTube or YouTube Music link / video ID…" value={videoURL}
             onChange={e => setVideoURL(e.target.value)}
-            className="w-full rounded-lg border border-input bg-background pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#f8bf59] transition-colors placeholder:text-muted-foreground" />
+            className="pl-9" />
         </div>
-        <button type="submit" disabled={!videoURL.trim()}
-          className="flex items-center gap-2 rounded-lg bg-[#f8bf59] px-5 py-2.5 text-sm font-bold text-[#070707] hover:bg-[#ffe49f] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm whitespace-nowrap w-full sm:w-auto justify-center">
+        <Button type="submit" variant="brand" disabled={!videoURL.trim()} className="w-full whitespace-nowrap sm:w-auto">
           <Play size={14} /> Play Video
-        </button>
+        </Button>
       </form>
 
       {/* ── Player + Sidebar ── */}
@@ -401,22 +403,26 @@ export default function VideoPlayer() {
 
         {/* Player column */}
         <div className="flex-1 min-w-0 space-y-4">
-          <div className="rounded-xl border border-border bg-card overflow-hidden shadow-lg">
+          <div className="st-card-elevated overflow-hidden">
             <div
               ref={playerRef}
-              className="relative w-full overflow-hidden h-[min(56vh,420px)] min-h-[280px] sm:aspect-video sm:h-auto sm:min-h-0"
+              className="relative h-[min(56vh,420px)] min-h-[280px] w-full overflow-hidden sm:aspect-video sm:h-auto sm:min-h-0"
             >
-              <div className="absolute -inset-4 opacity-30 blur-3xl bg-gradient-to-br from-yellow-500 via-red-500 to-purple-600 animate-pulse pointer-events-none" />
-              <div ref={setPlayerSlotEl} className="relative w-full h-full bg-black">
+              <div className="st-player-glow" />
+              <div ref={setPlayerSlotEl} className="relative h-full w-full bg-black">
                 {isPlayerLoading && (
                   <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-black/80 text-muted-foreground">
-                    <Loader2 size={28} className="animate-spin text-[#f8bf59]" />
+                    <Loader2 size={28} className="animate-spin text-brand" />
                     <span className="text-sm">Loading playlist…</span>
                   </div>
                 )}
                 {playlistsReady && !resumePrompt && activeList.length === 0 && !playerCanMount && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center px-4 text-center text-sm text-muted-foreground">
-                    Pick a video from your playlist or paste a link above
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 px-6 text-center">
+                    <div className="rounded-2xl bg-muted/30 p-4">
+                      <ListVideo size={32} className="text-muted-foreground/40" />
+                    </div>
+                    <p className="text-sm font-medium text-foreground">Nothing playing yet</p>
+                    <p className="max-w-xs text-xs text-muted-foreground">Paste a link above or pick a video from your playlist</p>
                   </div>
                 )}
               </div>
@@ -438,30 +444,23 @@ export default function VideoPlayer() {
                 )}
               </div>
               <div className="ml-auto flex items-center gap-2">
-                <button onClick={playNext} disabled={activeList.length < 2}
-                  className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30">
+                <Button variant="outline" size="sm" onClick={playNext} disabled={activeList.length < 2}>
                   <SkipForward size={13} /> Next
-                </button>
-                <button onClick={alreadyInList ? undefined : addToList} disabled={alreadyInList}
-                  className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                </Button>
+                <Button variant="success" size="sm" onClick={alreadyInList ? undefined : addToList} disabled={alreadyInList}>
                   <Plus size={13} /> {alreadyInList ? 'In Playlist' : 'Add to Playlist'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
 
           {/* Guest banner */}
           {!isSignedIn && isLoaded && (
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-sm">
-              <div className="flex items-center gap-2 text-blue-300">
-                <AlertCircle size={15} />
-                <span className="text-xs sm:text-sm">Playlist saved locally.</span>
-              </div>
-              <button onClick={() => setShowAuth(true)}
-                className="flex items-center gap-1.5 rounded-md bg-blue-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-400 transition-colors whitespace-nowrap">
-                Sync to cloud <ChevronRight size={12} />
-              </button>
-            </div>
+            <GuestBanner
+              message="Playlist saved locally."
+              actionLabel="Sync to cloud"
+              onAction={() => setShowAuth(true)}
+            />
           )}
 
           {/* Watch History (guests) */}
@@ -489,7 +488,7 @@ export default function VideoPlayer() {
 
             {/* ── Playlist Manager (auth users) ── */}
             {isSignedIn && user && (
-              <div className="rounded-xl border border-border bg-card p-4">
+              <div className="st-card p-4">
                 <PlaylistManager
                   userId={(user as any).id || (user as any)._id}
                   playlists={dbPlaylists}
@@ -505,15 +504,15 @@ export default function VideoPlayer() {
 
             {/* ── Guest playlist switcher ── */}
             {!isSignedIn && (
-              <div className="rounded-xl border border-border bg-card p-4">
+              <div className="st-card p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-bold flex items-center gap-1.5">
-                    <ListVideo size={14} className="text-[#f8bf59]" /> Playlists
-                    <span className="rounded-full bg-[#f8bf59]/20 text-[#f8bf59] text-xs font-bold px-2 py-0.5">{localPlaylists.length}</span>
+                    <ListVideo size={14} className="text-brand" /> Playlists
+                    <span className="rounded-full bg-brand/20 text-brand text-xs font-bold px-2 py-0.5">{localPlaylists.length}</span>
                   </span>
                   <button
                     onClick={() => setShowNewPlaylistPrompt(true)}
-                    className="flex items-center gap-1 rounded-md bg-[#f8bf59] px-2 py-1.5 text-xs font-bold text-[#070707] hover:bg-[#ffe49f] transition-colors">
+                    className="flex items-center gap-1 rounded-md bg-brand px-2 py-1.5 text-xs font-bold text-brand-foreground hover:bg-brand-hover transition-colors">
                     <Plus size={12} /> New
                   </button>
                 </div>
@@ -522,7 +521,7 @@ export default function VideoPlayer() {
                     <div key={p._id}
                       onClick={() => setActiveLocalId(p._id)}
                       className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-all ${
-                        p._id === activeLocalId ? 'border-[#f8bf59]/40 bg-[#f8bf59]/10' : 'border-border hover:bg-muted/30'
+                        p._id === activeLocalId ? 'border-brand/40 bg-brand/10' : 'border-border hover:bg-muted/30'
                       }`}>
                       <div className="h-6 w-6 rounded-md flex items-center justify-center" style={{ background: p.coverColor }}>
                         <ListVideo size={11} className="text-white" />
@@ -578,12 +577,12 @@ export default function VideoPlayer() {
 
             {/* ── Song queue for active playlist ── */}
             {activeList.length > 0 && (
-              <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+              <div className="st-card overflow-hidden shadow-sm">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                   <div className="flex items-center gap-2">
-                    <ListVideo size={15} className="text-[#f8bf59]" />
+                    <ListVideo size={15} className="text-brand" />
                     <span className="text-sm font-bold">Queue</span>
-                    <span className="rounded-full bg-[#f8bf59]/20 text-[#f8bf59] text-xs font-bold px-2 py-0.5">{activeList.length}</span>
+                    <span className="rounded-full bg-brand/20 text-brand text-xs font-bold px-2 py-0.5">{activeList.length}</span>
                   </div>
                   <button
                     type="button"
@@ -606,7 +605,7 @@ export default function VideoPlayer() {
 
       {/* Toast */}
       {toast && (
-        <div className={`fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[300] flex items-center gap-3 rounded-xl border px-5 py-3 text-sm font-medium shadow-2xl backdrop-blur-sm transition-all ${
+        <div className={`fixed bottom-20 right-4 z-[300] flex animate-in items-center gap-3 rounded-xl border px-5 py-3 text-sm font-medium shadow-2xl backdrop-blur-sm duration-300 fade-in slide-in-from-bottom-4 sm:bottom-6 sm:right-6 ${
           toast.type === 'success' ? 'border-emerald-500/40 bg-emerald-950/90 text-emerald-300' :
           toast.type === 'error'   ? 'border-red-500/40 bg-red-950/90 text-red-300' :
                                      'border-border bg-card/90 text-foreground'

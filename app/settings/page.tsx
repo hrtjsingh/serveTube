@@ -2,7 +2,8 @@
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import { useAuth } from '@/context/AuthContext'
 import { useAppTheme } from '@/context/ThemeContext'
-import { Palette, Bell, Shield, Info, ChevronRight, RotateCcw } from 'lucide-react'
+import { Palette, Shield, Info, ChevronRight, RotateCcw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export default function SettingsPage() {
   const { user, isSignedIn } = useAuth()
@@ -14,18 +15,17 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 pb-24 sm:pb-10 space-y-8">
+    <div className="st-page max-w-2xl space-y-8">
       <div>
-        <h1 className="text-2xl font-extrabold">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-2xl font-extrabold tracking-tight">Settings</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Ad-free, distraction-free YouTube — your picks, not the algorithm.
         </p>
       </div>
 
-      {/* Theme */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
+      <section className="st-section">
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-purple-500/10 p-2.5">
+          <div className="st-icon-box bg-purple-500/10">
             <Palette size={18} className="text-purple-400" />
           </div>
           <div>
@@ -35,17 +35,16 @@ export default function SettingsPage() {
         </div>
         <ThemeSwitcher />
         <p className="text-xs text-muted-foreground">
-          Current: <span className="font-semibold text-foreground capitalize">{theme}</span>
+          Current: <span className="font-semibold capitalize text-foreground">{theme}</span>
           {theme === 'amoled' && ' — True black background, saves battery on OLED screens'}
           {theme === 'dark'   && ' — Easy on the eyes in low light'}
           {theme === 'light'  && ' — Bright and clean'}
         </p>
       </section>
 
-      {/* Account */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-3">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="rounded-xl bg-blue-500/10 p-2.5">
+      <section className="st-section">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="st-icon-box bg-blue-500/10">
             <Shield size={18} className="text-blue-400" />
           </div>
           <div>
@@ -55,34 +54,36 @@ export default function SettingsPage() {
         </div>
         {isSignedIn ? (
           <div className="space-y-2">
-            <div className="flex items-center justify-between rounded-lg bg-muted/40 px-4 py-3">
-              <span className="text-sm text-muted-foreground">Name</span>
-              <span className="text-sm font-semibold">{user?.name}</span>
-            </div>
-            <div className="flex items-center justify-between rounded-lg bg-muted/40 px-4 py-3">
-              <span className="text-sm text-muted-foreground">Email</span>
-              <span className="text-sm font-semibold">{user?.email}</span>
-            </div>
+            {[
+              { label: 'Name', value: user?.name },
+              { label: 'Email', value: user?.email },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex items-center justify-between rounded-lg bg-muted/40 px-4 py-3">
+                <span className="text-sm text-muted-foreground">{label}</span>
+                <span className="text-sm font-semibold">{value}</span>
+              </div>
+            ))}
             <div className="flex items-center justify-between rounded-lg bg-muted/40 px-4 py-3">
               <span className="text-sm text-muted-foreground">Sync</span>
-              <span className="text-xs font-semibold bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full">Active</span>
+              <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-400">Active</span>
             </div>
           </div>
         ) : (
           <div className="rounded-lg bg-muted/40 px-4 py-4 text-center">
-            <p className="text-sm text-muted-foreground mb-3">Sign in to sync playlists across devices</p>
-            <a href="/" className="inline-flex items-center gap-1.5 rounded-lg bg-[#f8bf59] px-4 py-2 text-xs font-bold text-[#070707] hover:bg-[#ffe49f] transition-colors">
-              Sign In / Register <ChevronRight size={13} />
-            </a>
+            <p className="mb-3 text-sm text-muted-foreground">Sign in to sync playlists across devices</p>
+            <Button variant="brand" size="sm" asChild>
+              <a href="/">
+                Sign In / Register <ChevronRight size={13} />
+              </a>
+            </Button>
           </div>
         )}
       </section>
 
-      {/* About */}
-      <section className="rounded-2xl border border-border bg-card p-5">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="rounded-xl bg-yellow-500/10 p-2.5">
-            <Info size={18} className="text-[#f8bf59]" />
+      <section className="st-section">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="st-icon-box bg-brand/10">
+            <Info size={18} className="text-brand" />
           </div>
           <div>
             <h2 className="font-bold">About</h2>
@@ -96,11 +97,11 @@ export default function SettingsPage() {
           </div>
           <div className="flex items-center justify-between rounded-lg bg-muted/40 px-4 py-3">
             <span className="text-sm text-muted-foreground">PWA</span>
-            <span className="text-xs font-semibold bg-blue-500/15 text-blue-400 px-2 py-0.5 rounded-full">Installable</span>
+            <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-xs font-semibold text-blue-400">Installable</span>
           </div>
           <button
             onClick={resetOnboarding}
-            className="flex w-full items-center justify-between rounded-lg bg-muted/40 px-4 py-3 hover:bg-muted/60 transition-colors"
+            className="flex w-full items-center justify-between rounded-lg bg-muted/40 px-4 py-3 transition-colors hover:bg-muted/60"
           >
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <RotateCcw size={14} /> Replay onboarding tour

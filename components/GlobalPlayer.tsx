@@ -356,41 +356,42 @@ export function GlobalPlayer() {
 
       {showMini && (
         <div
-          className="fixed left-0 right-0 z-[45] border-t border-border bg-card/95 backdrop-blur-md shadow-lg bottom-16 lg:bottom-0"
+          className="fixed left-0 right-0 z-[45] border-t border-border/60 bg-card/95 shadow-lg shadow-black/10 backdrop-blur-xl bottom-16 lg:bottom-0"
           role="region"
           aria-label="Now playing"
         >
-          <div className="flex items-center gap-3 px-3 py-2 max-w-7xl mx-auto">
+          <div className="mx-auto flex max-w-7xl items-center gap-3 px-3 py-2.5">
             <button
               type="button"
               onClick={() => router.push('/')}
-              className="relative flex-shrink-0 w-14 aspect-video rounded-md overflow-hidden bg-muted"
+              className="relative aspect-video w-16 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/50"
             >
               <img
                 src={`https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`}
                 alt=""
-                className="w-full h-full object-cover"
+                className="h-full w-full object-cover"
               />
+              <div className="absolute inset-0 bg-brand/10" />
             </button>
             <button
               type="button"
               onClick={() => router.push('/')}
-              className="flex-1 min-w-0 text-left"
+              className="min-w-0 flex-1 text-left"
             >
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-brand">
                 {trackNumber && trackTotal > 1
                   ? `Track ${trackNumber} of ${trackTotal}`
                   : 'Now playing'}
               </p>
-              <p className="text-sm font-medium truncate">
+              <p className="truncate text-sm font-medium">
                 {titleLoading ? 'Loading…' : videoTitle}
               </p>
             </button>
-            <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="flex shrink-0 items-center gap-0.5">
               <button
                 type="button"
                 onClick={playNext}
-                className="rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 aria-label="Next video"
               >
                 <SkipForward size={18} />
@@ -398,7 +399,7 @@ export function GlobalPlayer() {
               <button
                 type="button"
                 onClick={() => router.push('/')}
-                className="rounded-md p-2 text-[#f8bf59] hover:bg-[#f8bf59]/10 transition-colors"
+                className="rounded-lg p-2 text-brand transition-colors hover:bg-brand/10"
                 aria-label="Open full player"
               >
                 <Maximize2 size={18} />

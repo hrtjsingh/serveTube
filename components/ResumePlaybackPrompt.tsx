@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePlayer } from '@/context/PlayerContext'
 import { fetchYouTubeTitle } from '@/lib/youtubeMetadata'
 import { Play, RotateCcw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 function formatTime(sec: number): string {
   const m = Math.floor(sec / 60)
@@ -49,9 +50,9 @@ export function ResumePlaybackPrompt() {
   const hasPosition = resumePrompt.positionSec > 0
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div className="st-modal-overlay z-[200]">
       <div
-        className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+        className="st-modal-panel"
         role="dialog"
         aria-labelledby="resume-playback-title"
         aria-modal="true"
@@ -63,37 +64,40 @@ export function ResumePlaybackPrompt() {
           You have saved progress on this playlist.
         </p>
 
-        <div className="mt-4 rounded-xl border border-border bg-muted/40 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {trackTotal > 1 ? `Track ${trackNum} of ${trackTotal}` : 'Last played'}
-          </p>
-          <p className="mt-1 text-sm font-medium line-clamp-2">
-            {titleLoading ? 'Loading title…' : title || resumePrompt.videoId}
-          </p>
-          {hasPosition && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              Resume at {formatTime(resumePrompt.positionSec)}
-            </p>
-          )}
+        <div className="mt-4 overflow-hidden rounded-xl border border-border bg-muted/40">
+          <div className="flex gap-3 p-4">
+            <div className="relative h-16 w-28 shrink-0 overflow-hidden rounded-lg bg-muted">
+              <img
+                src={`https://i.ytimg.com/vi/${resumePrompt.videoId}/mqdefault.jpg`}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {trackTotal > 1 ? `Track ${trackNum} of ${trackTotal}` : 'Last played'}
+              </p>
+              <p className="mt-1 line-clamp-2 text-sm font-medium">
+                {titleLoading ? 'Loading title…' : title || resumePrompt.videoId}
+              </p>
+              {hasPosition && (
+                <p className="mt-1 text-xs text-brand">
+                  Resume at {formatTime(resumePrompt.positionSec)}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-          <button
-            type="button"
-            onClick={confirmResumePlayback}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#f8bf59] px-4 py-2.5 text-sm font-semibold text-black hover:bg-[#f8bf59]/90 transition-colors"
-          >
+          <Button variant="brand" onClick={confirmResumePlayback} className="flex-1">
             <Play size={16} />
             Continue from last watch
-          </button>
-          <button
-            type="button"
-            onClick={startPlaylistFromBeginning}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold hover:bg-muted transition-colors"
-          >
+          </Button>
+          <Button variant="outline" onClick={startPlaylistFromBeginning} className="flex-1">
             <RotateCcw size={16} />
             Start from beginning
-          </button>
+          </Button>
         </div>
       </div>
     </div>

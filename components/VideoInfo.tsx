@@ -2,8 +2,16 @@
 import React, { useEffect, useState } from 'react';
 import { Play, Trash2, GripVertical, Loader2 } from 'lucide-react';
 import { fetchYouTubeTitle } from '@/lib/youtubeMetadata';
+import { cn } from '@/lib/utils';
 
-const VideoInfo = ({ id, index, changeVideo, deleteVideo, playingVideo, dragHandleProps }: any) => {
+const VideoInfo = ({ id, index, changeVideo, deleteVideo, playingVideo, dragHandleProps }: {
+  id: string
+  index: number
+  changeVideo: (id: string) => void
+  deleteVideo: (id: string) => void
+  playingVideo: boolean
+  dragHandleProps?: Record<string, unknown>
+}) => {
   const [thumb, setThumb] = useState('');
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(true);
@@ -18,55 +26,54 @@ const VideoInfo = ({ id, index, changeVideo, deleteVideo, playingVideo, dragHand
   }, [id]);
 
   return (
-    <div className={`group flex items-center gap-2 p-2 rounded-lg transition-colors cursor-pointer ${
-      playingVideo ? 'bg-[#f8bf59]/10 border border-[#f8bf59]/30' : 'hover:bg-muted/50 border border-transparent'
-    }`}>
-      {/* Drag handle */}
-      <span {...dragHandleProps} className="cursor-grab text-muted-foreground/40 group-hover:text-muted-foreground p-1 transition-colors touch-none">
+    <div
+      className={cn(
+        'group flex cursor-pointer items-center gap-2 rounded-lg border p-2 transition-all',
+        playingVideo
+          ? 'border-brand/30 bg-brand/10 shadow-sm shadow-brand/5'
+          : 'border-transparent hover:bg-muted/50'
+      )}
+      role="button"
+      aria-label={playingVideo ? `Now playing: ${title || id}` : `Play ${title || id}`}
+    >
+      <span {...dragHandleProps} className="cursor-grab touch-none p-1 text-muted-foreground/40 transition-colors group-hover:text-muted-foreground">
         <GripVertical size={14} />
       </span>
 
-      {/* Index / playing indicator */}
-      <span className="w-5 flex items-center justify-center text-xs text-muted-foreground flex-shrink-0">
+      <span className="flex w-5 shrink-0 items-center justify-center text-xs text-muted-foreground">
         {playingVideo
-          ? <Play size={11} className="text-[#f8bf59] fill-[#f8bf59]" />
+          ? <Play size={11} className="fill-brand text-brand" />
           : <span className="font-mono">{index + 1}</span>
         }
       </span>
 
-      {/* Thumbnail */}
       <div
-        className="relative flex-shrink-0 rounded overflow-hidden bg-muted"
+        className="relative shrink-0 overflow-hidden rounded-md bg-muted"
         style={{ width: 72, height: 40 }}
         onClick={() => changeVideo(id)}
       >
         {loading ? (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex animate-pulse items-center justify-center bg-muted">
             <Loader2 size={14} className="animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <img src={thumb} alt={title} className="w-full h-full object-cover" />
+          <img src={thumb} alt={title} className="h-full w-full object-cover" />
         )}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity">
-          <Play size={14} className="text-white fill-white" />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+          <Play size={14} className="fill-white text-white" />
         </div>
       </div>
 
-      {/* Title */}
-      <div
-        className="flex-1 min-w-0 cursor-pointer"
-        onClick={() => changeVideo(id)}
-      >
+      <div className="min-w-0 flex-1 cursor-pointer" onClick={() => changeVideo(id)}>
         <p className="truncate text-xs font-medium leading-snug">
           {loading ? <span className="text-muted-foreground">Loading…</span> : title}
         </p>
-        <p className="font-mono text-[10px] text-muted-foreground/60 mt-0.5">{id}</p>
+        <p className="mt-0.5 font-mono text-[10px] text-muted-foreground/60">{id}</p>
       </div>
 
-      {/* Delete */}
       <button
         onClick={e => { e.stopPropagation(); deleteVideo(id); }}
-        className="flex-shrink-0 rounded p-1.5 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+        className="shrink-0 rounded p-1.5 text-muted-foreground/40 opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
         title="Remove"
       >
         <Trash2 size={13} />
