@@ -45,14 +45,14 @@ export default function PlaylistsPage() {
   const totalSongs = playlists.reduce((s, p) => s + p.songs.length, 0)
 
   if (loading) return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
+    <div className="st-page-lg flex min-h-[60vh] flex-col items-center justify-center gap-3">
       <Loader2 size={28} className="animate-spin text-brand" />
       <p className="text-sm text-muted-foreground">Loading playlists…</p>
     </div>
   )
 
   return (
-    <div className="st-page">
+    <div className="st-page-lg">
       <PageHeader
         title="My Playlists"
         subtitle={`${playlists.length} playlist${playlists.length !== 1 ? 's' : ''} · ${totalSongs} videos total`}
@@ -80,7 +80,7 @@ export default function PlaylistsPage() {
             <div
               key={p._id}
               onClick={() => router.push('/')}
-              className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-brand/20 hover:shadow-lg hover:shadow-brand/5"
+              className="group relative cursor-pointer overflow-hidden st-card transition-all hover:-translate-y-0.5 hover:border-brand/25 hover:shadow-lg hover:shadow-brand/8"
             >
               <div
                 className="relative flex h-28 w-full items-center justify-center"

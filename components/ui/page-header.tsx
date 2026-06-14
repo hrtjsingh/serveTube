@@ -12,7 +12,7 @@ export function PageHeader({ title, subtitle, icon: Icon, action }: PageHeaderPr
   return (
     <div className="flex items-end justify-between gap-4">
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight">
+        <h1 className="st-display flex items-center gap-2 text-2xl font-semibold tracking-tight">
           {Icon && <Icon size={22} className="text-brand" />}
           {title}
         </h1>

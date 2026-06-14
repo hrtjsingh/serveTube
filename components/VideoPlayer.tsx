@@ -25,6 +25,7 @@ import {
   type LocalPlaylist,
 } from '@/lib/localPlaylists'
 import { readPlaylistProgress } from '@/lib/playlistProgress'
+import { cn } from '@/lib/utils'
 
 const LS_HIST = 'servetube_watch_history'
 
@@ -78,6 +79,7 @@ export default function VideoPlayer() {
   const [storageReady, setStorageReady]     = useState(false)
   const [authPlaylistsLoading, setAuthPlaylistsLoading] = useState(false)
   const [showNewPlaylistPrompt, setShowNewPlaylistPrompt] = useState(false)
+  const [mobileTab, setMobileTab]                   = useState<'watch' | 'queue'>('watch')
   const [deleteLocalTarget, setDeleteLocalTarget] = useState<LocalPlaylist | null>(null)
   const [showClearHistoryConfirm, setShowClearHistoryConfirm] = useState(false)
 
@@ -382,27 +384,50 @@ export default function VideoPlayer() {
     : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25'
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4">
+    <div className="w-full space-y-4">
 
       {/* ── URL bar ── */}
       <form onSubmit={handleSubmit}
         className="st-card flex flex-col items-center gap-3 p-3 sm:flex-row sm:p-4">
         <div className="relative w-full flex-1">
-          {/* <Play size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /> */}
           <Input type="text" placeholder="Paste YouTube or YouTube Music link / video ID…" value={videoURL}
-            onChange={e => setVideoURL(e.target.value)}
-            className="pl-9" />
+            onChange={e => setVideoURL(e.target.value)} />
         </div>
         <Button type="submit" variant="brand" disabled={!videoURL.trim()} className="w-full whitespace-nowrap sm:w-auto">
           <Play size={14} /> Play Video
         </Button>
       </form>
 
+      {/* ── Mobile tabs ── */}
+      <div className="st-mobile-tabs" role="tablist" aria-label="Player sections">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobileTab === 'watch'}
+          onClick={() => setMobileTab('watch')}
+          className={cn('st-mobile-tab', mobileTab === 'watch' ? 'st-mobile-tab-active' : 'st-mobile-tab-inactive')}
+        >
+          <Play size={14} /> Now Playing
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobileTab === 'queue'}
+          onClick={() => setMobileTab('queue')}
+          className={cn('st-mobile-tab', mobileTab === 'queue' ? 'st-mobile-tab-active' : 'st-mobile-tab-inactive')}
+        >
+          <ListVideo size={14} /> Queue
+          {activeList.length > 0 && (
+            <span className="st-badge-brand ml-0.5">{activeList.length}</span>
+          )}
+        </button>
+      </div>
+
       {/* ── Player + Sidebar ── */}
-      <div className="video-player-layout flex flex-col lg:flex-row gap-4">
+      <div className="video-player-layout flex flex-col gap-4 lg:flex-row">
 
         {/* Player column */}
-        <div className="flex-1 min-w-0 space-y-4">
+        <div className={cn('min-w-0 flex-1 space-y-4', mobileTab !== 'watch' && 'hidden lg:block')}>
           <div className="st-card-elevated overflow-hidden">
             <div
               ref={playerRef}
@@ -484,7 +509,7 @@ export default function VideoPlayer() {
         </div>
 
         {/* ── Sidebar ── */}
-        <div className="flex w-full lg:w-[360px] xl:w-[400px] flex-shrink-0 flex-col gap-3">
+        <div className={cn('st-sidebar-panel', mobileTab !== 'queue' && 'hidden lg:flex')}>
 
             {/* ── Playlist Manager (auth users) ── */}
             {isSignedIn && user && (

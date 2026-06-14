@@ -40,14 +40,14 @@ export default function ProfilePage() {
   }, [isSignedIn, user])
 
   if (!isLoaded) return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
+    <div className="st-page-narrow flex min-h-[60vh] flex-col items-center justify-center gap-3">
       <Loader2 size={28} className="animate-spin text-brand" />
       <p className="text-sm text-muted-foreground">Loading profile…</p>
     </div>
   )
 
   if (!isSignedIn) return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4 pb-24">
+    <div className="st-page-narrow flex min-h-[60vh] flex-col items-center justify-center gap-4">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted/60">
         <User size={28} className="text-muted-foreground" />
       </div>
@@ -73,7 +73,7 @@ export default function ProfilePage() {
   ]
 
   return (
-    <div className="st-page max-w-lg">
+    <div className="st-page-narrow">
       <div className="flex flex-col items-center gap-3 py-4">
         <div className="flex h-20 w-20 items-center justify-center rounded-full bg-brand text-3xl font-extrabold text-brand-foreground shadow-lg shadow-brand/20">
           {user?.name?.[0]?.toUpperCase()}

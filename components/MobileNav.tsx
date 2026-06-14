@@ -40,7 +40,7 @@ export function MobileNav() {
       )}
     >
       {active && (
-        <span className="absolute top-1 h-1 w-5 rounded-full bg-brand" />
+        <span className="absolute top-1 h-0.5 w-5 bg-brand shadow-sm shadow-brand/30" />
       )}
       {children ?? (Icon && <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />)}
       <span className="text-[10px] font-medium">{label}</span>
@@ -49,7 +49,7 @@ export function MobileNav() {
 
   return (
     <>
-      <nav className="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-50 flex h-16 border-t border-border/60 bg-background/90 backdrop-blur-xl safe-bottom lg:hidden">
+      <nav className="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-50 flex h-16 border-t border-brand/12 bg-background/85 backdrop-blur-xl safe-bottom lg:hidden">
         {NAV.map(({ label, icon: Icon, href }) => (
           <NavButton
             key={href}
