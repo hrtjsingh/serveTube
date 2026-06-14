@@ -98,7 +98,6 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   const setPlaylistsReady = useCallback((ready: boolean) => {
     setPlaylistsReadyState(ready)
-    if (!ready) resumeOfferedRef.current = false
   }, [])
 
   const syncQueueKey = useCallback((key: string) => {
@@ -157,6 +156,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     (session: PlaylistSession, currentQueue: QueueItem[]) => {
       if (resumeOfferedRef.current || !currentQueue.length) return
 
+      if (hasStarted && videoId) {
+        resumeOfferedRef.current = true
+        return
+      }
+
       const saved = pendingProgressRef.current
       const hasMatchingSaved =
         !!saved &&
@@ -173,7 +177,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
       startPlayback(currentQueue[0].id, 0)
     },
-    [startPlayback]
+    [hasStarted, startPlayback, videoId]
   )
 
   const confirmResumePlayback = useCallback(() => {
@@ -287,7 +291,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   )
   const trackNumber = trackIndex >= 0 ? trackIndex + 1 : null
   const trackTotal = queue.length
-  const playerCanMount = playlistsReady && VIDEO_ID_RE.test(videoId)
+  const playerCanMount =
+    VIDEO_ID_RE.test(videoId) && (hasStarted || playlistsReady)
 
   useEffect(() => {
     if (!videoId) {
