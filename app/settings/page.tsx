@@ -2,7 +2,8 @@
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import { useAuth } from '@/context/AuthContext'
 import { useAppTheme } from '@/context/ThemeContext'
-import { Palette, Shield, Info, ChevronRight, RotateCcw } from 'lucide-react'
+import { PageHeader } from '@/components/ui/page-header'
+import { Palette, Shield, Info, ChevronRight, RotateCcw, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default function SettingsPage() {
@@ -15,13 +16,12 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="st-page max-w-2xl space-y-8">
-      <div>
-        <h1 className="text-2xl font-extrabold tracking-tight">Settings</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Ad-free, distraction-free YouTube — your picks, not the algorithm.
-        </p>
-      </div>
+    <div className="st-page-narrow space-y-6">
+      <PageHeader
+        title="Settings"
+        subtitle="Ad-free, distraction-free YouTube — your picks, not the algorithm."
+        icon={Settings}
+      />
 
       <section className="st-section">
         <div className="flex items-center gap-3">

@@ -39,7 +39,7 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="st-page max-w-2xl">
+    <div className="st-page-narrow">
       <PageHeader
         title="Watch History"
         subtitle={`${history.length} videos watched`}
