@@ -29,6 +29,9 @@ import { cn } from '@/lib/utils'
 
 const LS_HIST = 'servetube_watch_history'
 
+/** Persists across home mount/unmount so auth playlists are not re-fetched every navigation. */
+let authPlaylistsLoaded = false
+
 function timeAgo(ts: number): string {
   const s = Math.floor((Date.now() - ts) / 1000)
   if (s < 5)  return 'just now'
@@ -70,7 +73,6 @@ export default function VideoPlayer() {
   const [isDirty, setIsDirty]               = useState(false)
   const [lastSynced, setLastSynced]         = useState<number | null>(null)
   const [syncError, setSyncError]           = useState<string | null>(null)
-  const initialLoadDone = useRef(false)
 
   // ── Guest local playlist state (defaults until client hydration) ─────────
   const [localPlaylists, setLocalPlaylists] = useState<LocalPlaylist[]>([DEFAULT_LOCAL_PLAYLIST])
@@ -135,7 +137,7 @@ export default function VideoPlayer() {
   const setActiveList = (songs: { id: string }[]) => {
     if (isSignedIn) {
       setDbPlaylists(ps => ps.map(p => p._id === activePlaylistId ? { ...p, songs } : p))
-      if (initialLoadDone.current) { setIsDirty(true); setSyncError(null) }
+      if (authPlaylistsLoaded) { setIsDirty(true); setSyncError(null) }
     } else {
       setLocalPlaylists(ps => {
         const updated = ps.map(p => p._id === activeLocalId ? { ...p, songs } : p)
@@ -154,12 +156,14 @@ export default function VideoPlayer() {
   // On auth change
   useEffect(() => {
     if (!isLoaded) return
-    setPlaylistsReady(false)
     if (!isSignedIn) {
       hydrateGuestPlaylists()
-      initialLoadDone.current = false
+      authPlaylistsLoaded = false
       if (storageReady) setPlaylistsReady(true)
-    } else {
+      return
+    }
+    if (!authPlaylistsLoaded) {
+      setPlaylistsReady(false)
       loadUserPlaylists()
     }
   }, [isLoaded, isSignedIn, storageReady, setPlaylistsReady, hydrateGuestPlaylists])
@@ -194,7 +198,7 @@ export default function VideoPlayer() {
           userId: uid, songs: seeds, name: 'My Playlist', isDefault: true
         })
         const created = cr.data.playlist
-        initialLoadDone.current = true
+        authPlaylistsLoaded = true
         setDbPlaylists([created])
         setActivePlaylistId(created._id)
         setLastSynced(Date.now()); setIsDirty(false)
@@ -211,7 +215,7 @@ export default function VideoPlayer() {
           ps[0] = { ...first, songs: merged }
           writeLocalJson(LS_PLAYLIST_LEGACY, [])
         }
-        initialLoadDone.current = true
+        authPlaylistsLoaded = true
         const progress = readPlaylistProgress()
         let activeId = ps[0]._id
         if (progress?.source === 'auth') {
