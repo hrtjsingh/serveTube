@@ -4,6 +4,9 @@ import { useRouter } from 'next/navigation'
 import { usePlayer } from '@/context/PlayerContext'
 import { Play, Trash2, History, Clock } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { EmptyState } from '@/components/ui/empty-state'
+import { PageHeader } from '@/components/ui/page-header'
+import { Button } from '@/components/ui/button'
 
 import { readLocalJson, writeLocalJson } from '@/lib/storage'
 
@@ -36,65 +39,57 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 pb-24 sm:pb-10 space-y-6">
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold flex items-center gap-2">
-            <History size={22} /> Watch History
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">{history.length} videos watched</p>
-        </div>
-        {history.length > 0 && (
-          <button onClick={() => setShowClearConfirm(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors">
+    <div className="st-page max-w-2xl">
+      <PageHeader
+        title="Watch History"
+        subtitle={`${history.length} videos watched`}
+        icon={History}
+        action={history.length > 0 ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowClearConfirm(true)}
+            className="text-muted-foreground hover:border-destructive/40 hover:text-destructive"
+          >
             <Trash2 size={13} /> Clear all
-          </button>
-        )}
-      </div>
+          </Button>
+        ) : undefined}
+      />
 
       {history.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 py-20 text-center text-muted-foreground">
-          <History size={40} className="opacity-20" />
-          <h2 className="text-lg font-bold text-foreground">No watch history</h2>
-          <p className="text-sm">Videos you play will appear here.</p>
-          <button onClick={() => router.push('/')}
-            className="mt-2 flex items-center gap-2 rounded-lg bg-[#f8bf59] px-4 py-2 text-sm font-bold text-[#070707] hover:bg-[#ffe49f] transition-colors">
-            <Play size={14} /> Browse videos
-          </button>
-        </div>
+        <EmptyState
+          icon={History}
+          title="No watch history"
+          description="Videos you play will appear here."
+          action={{ label: 'Browse videos', onClick: () => router.push('/'), icon: Play }}
+        />
       ) : (
         <div className="space-y-2">
           {history.map(h => (
-            <div key={h.id + h.watchedAt}
-              className="group flex items-center gap-3 rounded-xl border border-border bg-card p-3 hover:border-border/80 hover:bg-muted/20 transition-all">
-              {/* Thumbnail */}
-              <div className="relative flex-shrink-0 w-24 aspect-video rounded-lg overflow-hidden bg-muted">
+            <div key={h.id + h.watchedAt} className="st-list-row group">
+              <div className="relative aspect-video w-24 shrink-0 overflow-hidden rounded-lg bg-muted">
                 <img
                   src={`https://i.ytimg.com/vi/${h.id}/mqdefault.jpg`}
                   alt={h.id}
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                 />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Play size={14} className="text-white fill-white" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                  <Play size={14} className="fill-white text-white" />
                 </div>
               </div>
-              {/* Info */}
-              <div className="flex-1 min-w-0 cursor-pointer" onClick={() => playVideo(h.id)}>
-                <p className="text-sm font-mono font-medium truncate">{h.id}</p>
-                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5" suppressHydrationWarning>
+              <div className="min-w-0 flex-1 cursor-pointer" onClick={() => playVideo(h.id)}>
+                <p className="truncate text-sm font-medium">{h.id}</p>
+                <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground" suppressHydrationWarning>
                   <Clock size={10} /> {timeAgo(h.watchedAt)}
                 </p>
               </div>
-              {/* Actions */}
               <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => playVideo(h.id)}
-                  className="flex items-center gap-1 rounded-md bg-[#f8bf59]/10 text-[#f8bf59] border border-[#f8bf59]/30 px-2.5 py-1.5 text-xs font-bold hover:bg-[#f8bf59]/20 transition-colors">
+                <Button variant="brandSoft" size="sm" onClick={() => playVideo(h.id)}>
                   <Play size={11} /> Play
-                </button>
+                </Button>
                 <button
                   onClick={() => remove(h.id, h.watchedAt)}
-                  className="rounded-md p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+                  className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive">
                   <Trash2 size={13} />
                 </button>
               </div>

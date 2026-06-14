@@ -4,6 +4,7 @@ import { AppThemeProvider } from '@/context/ThemeContext'
 import { GlobalPlayer } from '@/components/GlobalPlayer'
 import { ResumePlaybackPrompt } from '@/components/ResumePlaybackPrompt'
 import { PwaViewportFix } from '@/components/PwaViewportFix'
+import { BackgroundAnimation } from '@/components/BackgroundAnimation'
 import { Header } from '@/components/header'
 import { MobileNav } from '@/components/MobileNav'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -32,10 +33,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/logo192.png" type="image/png" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} bg-background flex min-h-full flex-col antialiased pb-16 lg:pb-0`}
+        className={`${geistSans.variable} ${geistMono.variable} flex min-h-full flex-col antialiased pb-16 lg:pb-0`}
         suppressHydrationWarning
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+          <BackgroundAnimation />
           <PwaViewportFix />
           <AuthProvider>
             <PlayerProvider>

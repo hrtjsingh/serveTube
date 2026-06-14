@@ -2,6 +2,8 @@
 import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { X, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 export default function AuthModal({ onClose }: { onClose: () => void }) {
   const { login, register } = useAuth()
@@ -26,8 +28,9 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
         await register(name.trim(), email, password)
       }
       onClose()
-    } catch (e: any) {
-      setError(e?.response?.data?.error || 'Something went wrong')
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { error?: string } } }
+      setError(err?.response?.data?.error || 'Something went wrong')
     } finally {
       setLoading(false)
     }
@@ -35,16 +38,14 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      className="st-modal-overlay z-[200]"
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div className="relative w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-        {/* Close */}
-        <button onClick={onClose} className="absolute right-4 top-4 rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+      <div className="st-modal-panel max-w-md p-8">
+        <button onClick={onClose} className="absolute right-4 top-4 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
           <X size={18} />
         </button>
 
-        {/* Title */}
         <div className="mb-1">
           <h2 className="text-2xl font-extrabold tracking-tight">
             {tab === 'login' ? 'Welcome back' : 'Create account'}
@@ -56,8 +57,7 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
           </p>
         </div>
 
-        {/* Tab bar */}
-        <div className="mt-5 mb-6 flex rounded-lg bg-muted p-1 gap-1">
+        <div className="mt-5 mb-6 flex gap-1 rounded-lg bg-muted p-1">
           {(['login', 'register'] as const).map(t => (
             <button
               key={t}
@@ -69,34 +69,22 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
           ))}
         </div>
 
-        {/* Fields */}
         <div className="space-y-4">
           {tab === 'register' && (
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Full Name</label>
-              <input
-                className="w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm outline-none focus:border-[#f8bf59] transition-colors placeholder:text-muted-foreground"
-                placeholder="Your name"
-                value={name}
-                onChange={e => setName(e.target.value)}
-              />
+              <label className="st-label">Full Name</label>
+              <Input placeholder="Your name" value={name} onChange={e => setName(e.target.value)} />
             </div>
           )}
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Email</label>
-            <input
-              className="w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm outline-none focus:border-[#f8bf59] transition-colors placeholder:text-muted-foreground"
-              type="email"
-              placeholder="you@email.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-            />
+            <label className="st-label">Email</label>
+            <Input type="email" placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)} />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Password</label>
+            <label className="st-label">Password</label>
             <div className="relative">
-              <input
-                className="w-full rounded-lg border border-input bg-background px-4 py-2.5 pr-11 text-sm outline-none focus:border-[#f8bf59] transition-colors placeholder:text-muted-foreground"
+              <Input
+                className="pr-11"
                 type={showPw ? 'text' : 'password'}
                 placeholder="Min 8 characters"
                 value={password}
@@ -114,34 +102,23 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
           </div>
 
           {error && (
-            <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
           )}
         </div>
 
-        {/* Actions */}
-        <div className="mt-6 flex gap-3 justify-end">
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={submit}
-            disabled={loading}
-            className="flex items-center gap-2 rounded-lg bg-[#f8bf59] px-5 py-2 text-sm font-bold text-[#070707] hover:bg-[#ffe49f] transition-colors disabled:opacity-60 shadow-sm"
-          >
+        <div className="mt-6 flex justify-end gap-3">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="brand" onClick={submit} disabled={loading}>
             {loading && <Loader2 size={14} className="animate-spin" />}
             {tab === 'login' ? 'Sign In' : 'Create Account'}
-          </button>
+          </Button>
         </div>
 
-        {/* Switch */}
         <p className="mt-4 text-center text-xs text-muted-foreground">
           {tab === 'login' ? "Don't have an account? " : "Already have an account? "}
           <button
             onClick={() => { setTab(tab === 'login' ? 'register' : 'login'); setError('') }}
-            className="font-semibold text-foreground hover:text-[#f8bf59] transition-colors underline underline-offset-2"
+            className="font-semibold text-foreground underline underline-offset-2 transition-colors hover:text-brand"
           >
             {tab === 'login' ? 'Register' : 'Sign in'}
           </button>

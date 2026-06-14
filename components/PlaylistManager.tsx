@@ -227,7 +227,7 @@ function ImportModal({
               onClick={() => setReverseOrder(v => !v)}
               className={`flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
                 reverseOrder
-                  ? 'border-[#f8bf59]/50 bg-[#f8bf59]/15 text-[#f8bf59]'
+                  ? 'border-brand/50 bg-brand/15 text-brand'
                   : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
@@ -336,9 +336,9 @@ export function PlaylistManager({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Music size={15} className="text-[#f8bf59]" />
+          <Music size={15} className="text-brand" />
           <span className="text-sm font-bold">Playlists</span>
-          <span className="rounded-full bg-[#f8bf59]/20 text-[#f8bf59] text-xs font-bold px-2 py-0.5">
+          <span className="rounded-full bg-brand/20 text-brand text-xs font-bold px-2 py-0.5">
             {playlists.length}
           </span>
         </div>
@@ -348,7 +348,7 @@ export function PlaylistManager({
             <Upload size={12} /> Import
           </button>
           <button onClick={() => setModal('create')}
-            className="flex items-center gap-1 rounded-md bg-[#f8bf59] px-2 py-1.5 text-xs font-bold text-[#070707] hover:bg-[#ffe49f] transition-colors">
+            className="flex items-center gap-1 rounded-md bg-brand px-2 py-1.5 text-xs font-bold text-brand-foreground hover:bg-brand-hover transition-colors">
             <Plus size={12} /> New
           </button>
         </div>
@@ -373,7 +373,7 @@ export function PlaylistManager({
                 onClick={() => onSelect(p._id)}
                 className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 cursor-pointer transition-all ${
                   active
-                    ? 'border-[#f8bf59]/40 bg-[#f8bf59]/10'
+                    ? 'border-brand/40 bg-brand/10'
                     : 'border-border hover:border-border/80 hover:bg-muted/30'
                 }`}
               >
@@ -395,7 +395,7 @@ export function PlaylistManager({
                 </div>
 
                 {/* Active chevron */}
-                {active && <ChevronRight size={14} className="text-[#f8bf59] flex-shrink-0" />}
+                {active && <ChevronRight size={14} className="text-brand flex-shrink-0" />}
 
                 {/* Actions — show on hover */}
                 <div className="hidden group-hover:flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
@@ -459,12 +459,12 @@ export function PlaylistManager({
 // ── Shared sub-components ────────────────────────────────────────────────────
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+    <div className="st-modal-overlay z-[300]"
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
-        <div className="flex items-center justify-between mb-5">
+      <div className="st-modal-panel">
+        <div className="mb-5 flex items-center justify-between">
           <h3 className="text-lg font-bold">{title}</h3>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors"><X size={16} /></button>
+          <button onClick={onClose} className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"><X size={16} /></button>
         </div>
         {children}
       </div>
@@ -475,12 +475,12 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</label>
+      <label className="st-label">{label}</label>
       {children}
     </div>
   )
 }
 
-const INPUT    = 'w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-[#f8bf59] transition-colors placeholder:text-muted-foreground'
-const BTN_PRIMARY = 'flex items-center gap-1.5 rounded-lg bg-[#f8bf59] px-3 py-2 text-xs font-bold text-[#070707] hover:bg-[#ffe49f] transition-colors disabled:opacity-50'
-const BTN_GHOST   = 'flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors'
+const INPUT = 'st-input'
+const BTN_PRIMARY = 'inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-brand-foreground transition-colors hover:bg-brand-hover disabled:opacity-50'
+const BTN_GHOST = 'inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted'

@@ -10,17 +10,17 @@ export default function Home() {
       <JsonLd />
       <main className="flex flex-col items-center px-2 pt-4 pb-20 sm:pb-12">
         <Onboarding />
-        <header className="text-center mb-4">
+        <header className="mb-6 text-center">
           <Image
             src={Logo}
             alt="ServeTube — ad-free, distraction-free YouTube player"
-            className="h-12 w-auto mx-auto mb-1.5 sm:h-14"
+            className="mx-auto mb-2 h-12 w-auto drop-shadow-sm sm:h-14"
             priority
           />
-          <h1 className="text-base sm:text-lg font-bold tracking-tight max-w-lg mx-auto">
-            Ad-free, distraction-free YouTube
+          <h1 className="text-lg font-extrabold tracking-tight sm:text-xl">
+            <span className="st-gradient-text">Ad-free, distraction-free YouTube</span>
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed mt-1">
+          <p className="mx-auto mt-2 max-w-lg text-xs leading-relaxed text-muted-foreground sm:text-sm">
             Watch only what you want, not what the algorithm wants. Playlists, no ads, no feed.
           </p>
         </header>
