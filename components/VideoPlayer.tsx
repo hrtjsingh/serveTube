@@ -351,7 +351,7 @@ export default function VideoPlayer() {
 
   const playNext = () => {
     if (!activeList.length) return
-    const idx  = activeList.findIndex((v: any) => v.id === videoId)
+    const idx = activeList.findIndex((v: { id: string }) => v.id === videoId)
     const next = activeList[idx < activeList.length - 1 ? idx + 1 : 0]
     changeVideo(next.id)
   }

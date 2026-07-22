@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
-import Logo from '../assets/logo.svg'
+import { BrandLogo } from './BrandLogo'
 
 export function HomeHero() {
   const [compact, setCompact] = useState(false)
@@ -14,6 +13,7 @@ export function HomeHero() {
   if (compact) {
     return (
       <header className="mb-5 w-full max-w-2xl text-center">
+        <BrandLogo className="mx-auto mb-3 justify-center" size="2xl" />
         <h1 className="st-display text-xl font-semibold tracking-tight sm:text-2xl">
           <span className="st-gradient-text">Ad-free, distraction-free YouTube</span>
         </h1>
@@ -29,12 +29,7 @@ export function HomeHero() {
       <div className="st-hero-divider mb-5">
         <span className="st-accent-dot" />
       </div>
-      <Image
-        src={Logo}
-        alt="ServeTube — ad-free, distraction-free YouTube player"
-        className="mx-auto mb-4 h-14 w-auto drop-shadow-lg sm:h-16"
-        priority
-      />
+      <BrandLogo className="mx-auto mb-4 justify-center" size="3xl" />
       <p className="st-jp mb-3 text-sm font-light tracking-[0.3em] text-brand/90 uppercase">
         侍 · 集中して観る
       </p>
