@@ -17,8 +17,12 @@ export const BACKGROUND_PLAYER_STYLE: CSSProperties = {
 /** @deprecated Use BACKGROUND_PLAYER_STYLE */
 export const HIDDEN_PLAYER_STYLE = BACKGROUND_PLAYER_STYLE
 
-const YT_PLAYING = 1
-const YT_BUFFERING = 3
+export const YT_UNSTARTED = -1
+export const YT_ENDED = 0
+export const YT_PLAYING = 1
+export const YT_PAUSED = 2
+export const YT_BUFFERING = 3
+export const YT_CUED = 5
 
 type MediaHandlers = {
   onPlay: () => void
@@ -72,11 +76,20 @@ export function clearMediaSession(): void {
   }
 }
 
-function tryResume(player: YtPlayerApi, userPaused: boolean): void {
-  if (userPaused || !document.hidden) return
+function tryResume(
+  player: YtPlayerApi,
+  userPaused: boolean,
+  onVideoEnded?: () => void
+): void {
+  if (userPaused) return
   try {
     const state = player.getPlayerState?.()
     if (state === YT_PLAYING || state === YT_BUFFERING) return
+    if (state === YT_ENDED) {
+      onVideoEnded?.()
+      return
+    }
+    if (!document.hidden) return
     player.playVideo?.()
   } catch {
     // iframe not ready
@@ -85,18 +98,19 @@ function tryResume(player: YtPlayerApi, userPaused: boolean): void {
 
 export function attachBackgroundKeepalive(
   getPlayer: () => YtPlayerApi | null,
-  isUserPaused: () => boolean
+  isUserPaused: () => boolean,
+  onVideoEnded?: () => void
 ): () => void {
   const onVisibility = () => {
     const player = getPlayer()
     if (!player || !document.hidden) return
-    tryResume(player, isUserPaused())
+    tryResume(player, isUserPaused(), onVideoEnded)
   }
 
   const onPageShow = () => {
     const player = getPlayer()
     if (!player) return
-    tryResume(player, isUserPaused())
+    tryResume(player, isUserPaused(), onVideoEnded)
   }
 
   document.addEventListener('visibilitychange', onVisibility)
@@ -104,8 +118,8 @@ export function attachBackgroundKeepalive(
 
   const interval = window.setInterval(() => {
     const player = getPlayer()
-    if (!player || !document.hidden) return
-    tryResume(player, isUserPaused())
+    if (!player) return
+    tryResume(player, isUserPaused(), onVideoEnded)
   }, 1500)
 
   return () => {

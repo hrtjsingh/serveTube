@@ -19,6 +19,9 @@ import {
   clearMediaSession,
   HIDDEN_PLAYER_STYLE,
   syncMediaSession,
+  YT_CUED,
+  YT_ENDED,
+  YT_PAUSED,
 } from '@/lib/backgroundPlayback'
 
 const PSEUDO_FULLSCREEN_STYLE: React.CSSProperties = {
@@ -63,6 +66,7 @@ export function GlobalPlayer() {
   const ytReadyRef = useRef(false)
   const pendingSeekRef = useRef<number | null>(null)
   const userPausedRef = useRef(false)
+  const endHandledRef = useRef(false)
   const ytPlayerRef = useRef<YtPlayerApi | null>(null)
   const [playerMounted, setPlayerMounted] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -249,6 +253,31 @@ export function GlobalPlayer() {
   }, [ytPlayer])
 
   useEffect(() => {
+    endHandledRef.current = false
+  }, [videoId])
+
+  const handleVideoEnd = useCallback(() => {
+    if (endHandledRef.current) return
+    endHandledRef.current = true
+    persistProgress()
+    playNext()
+  }, [persistProgress, playNext])
+
+  const ensurePlaying = useCallback((player: YtPlayerApi) => {
+    if (userPausedRef.current) return
+    try {
+      player.playVideo?.()
+    } catch {
+      // iframe not ready
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!ytPlayer || !videoId) return
+    ensurePlaying(ytPlayer)
+  }, [videoId, ytPlayer, ensurePlaying])
+
+  useEffect(() => {
     if (!hasStarted || !videoId) {
       clearMediaSession()
       return
@@ -273,9 +302,10 @@ export function GlobalPlayer() {
     if (!hasStarted) return
     return attachBackgroundKeepalive(
       () => ytPlayerRef.current,
-      () => userPausedRef.current
+      () => userPausedRef.current,
+      handleVideoEnd
     )
-  }, [hasStarted])
+  }, [hasStarted, handleVideoEnd])
 
   useEffect(() => {
     if (!hasStarted) return
@@ -323,6 +353,7 @@ export function GlobalPlayer() {
             onReady={e => {
               setYtPlayer(e.target)
               applyPendingSeek(e.target)
+              ensurePlaying(e.target)
               if (!ytReadyRef.current) {
                 ytReadyRef.current = true
                 markPlayerActive()
@@ -331,14 +362,16 @@ export function GlobalPlayer() {
             onStateChange={e => {
               const state = e.data
               if (state === 1 || state === 3) userPausedRef.current = false
-              if (state === 2) userPausedRef.current = true
+              if (state === YT_PAUSED) userPausedRef.current = true
+              if (state === YT_ENDED) handleVideoEnd()
+              if (state === YT_CUED && !userPausedRef.current) ensurePlaying(e.target)
 
               if (pendingSeekRef.current == null) return
               if (state === 1 || state === 2 || state === 3 || state === 5) {
                 applyPendingSeek(e.target)
               }
             }}
-            onEnd={playNext}
+            onEnd={handleVideoEnd}
           />
         ) : null}
 
