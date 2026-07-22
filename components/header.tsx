@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useAppTheme } from '@/context/ThemeContext'
 import AuthModal from './AuthModal'
+import { BrandLogo } from './BrandLogo'
 import { LogOut, User, Sun, Moon, Circle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -27,11 +28,7 @@ export function Header() {
     <>
       <header className="st-glass sticky top-0 z-50 flex h-14 sm:h-16 items-center justify-between gap-4 border-b border-brand/10 px-3 sm:px-5">
         <Link href="/" className="group flex shrink-0 items-center gap-x-2 transition-opacity hover:opacity-90">
-          <span className="relative flex items-center gap-1.5 text-xl font-extrabold tracking-tight sm:text-2xl">
-            <span className="st-display text-brand transition-colors group-hover:text-brand-hover">SERVE</span>
-            <span className="st-jp ml-0.5 rounded border border-brand/30 bg-brand/20 px-1.5 py-0.5 text-sm text-brand-foreground shadow-sm shadow-brand/20 sm:text-base">TUBE</span>
-            <span className="ml-1 h-2 w-2 rotate-45 bg-brand shadow-sm shadow-brand/40" />
-          </span>
+          <BrandLogo interactive />
         </Link>
 
         <div className="flex items-center gap-2">

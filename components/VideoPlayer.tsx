@@ -50,6 +50,7 @@ export default function VideoPlayer() {
     videoTitle,
     titleLoading,
     setVideoId,
+    playNext,
     syncQueueKey,
     setPlayerSlotEl,
     setPlaylistSession,
@@ -348,13 +349,6 @@ export default function VideoPlayer() {
     : false
 
   const changeVideo = (id: string) => setVideoId(id)
-
-  const playNext = () => {
-    if (!activeList.length) return
-    const idx  = activeList.findIndex((v: any) => v.id === videoId)
-    const next = activeList[idx < activeList.length - 1 ? idx + 1 : 0]
-    changeVideo(next.id)
-  }
 
   const alreadyInList = activeList.some((v: any) => v.id === videoId)
 

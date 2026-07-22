@@ -15,10 +15,12 @@ export interface SavedPlaylistProgress {
 
 export interface YtPlayerApi {
   getCurrentTime: () => number
+  getDuration?: () => number
   seekTo: (seconds: number, allowSeekAhead: boolean) => void
   getPlayerState?: () => number
   playVideo?: () => void
   pauseVideo?: () => void
+  loadVideoById?: (videoId: string, startSeconds?: number) => void
 }
 
 export function readPlaylistProgress(): SavedPlaylistProgress | null {

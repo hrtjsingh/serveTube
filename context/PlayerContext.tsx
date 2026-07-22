@@ -40,6 +40,7 @@ interface PlayerCtx {
   setVideoId: (id: string) => void
   queue: QueueItem[]
   syncQueueKey: (key: string) => void
+  getNextVideoId: () => string | null
   playNext: () => void
   hasStarted: boolean
   playlistsReady: boolean
@@ -250,12 +251,20 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   const markPlayerActive = useCallback(() => setHasStarted(true), [])
 
-  const playNext = useCallback(() => {
-    if (!queue.length) return
+  const getNextVideoId = useCallback((): string | null => {
+    if (queue.length < 2) return null
     const idx = queue.findIndex(v => v.id === videoId)
-    const next = queue[idx < queue.length - 1 ? idx + 1 : 0]
-    setVideoId(next.id)
-  }, [queue, videoId, setVideoId])
+    const nextIdx = idx >= 0 ? (idx + 1) % queue.length : 0
+    const next = queue[nextIdx]
+    if (!next?.id || next.id === videoId) return null
+    return next.id
+  }, [queue, videoId])
+
+  const playNext = useCallback(() => {
+    const nextId = getNextVideoId()
+    if (!nextId) return
+    startPlayback(nextId, 0)
+  }, [getNextVideoId, startPlayback])
 
   const persistProgress = useCallback(() => {
     if (!playlistSession || !queue.length || !hasStarted || !videoId) return
@@ -333,6 +342,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         setVideoId,
         queue,
         syncQueueKey,
+        getNextVideoId,
         playNext,
         hasStarted,
         playlistsReady,

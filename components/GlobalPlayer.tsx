@@ -19,9 +19,11 @@ import {
   clearMediaSession,
   HIDDEN_PLAYER_STYLE,
   syncMediaSession,
+  YT_BUFFERING,
   YT_CUED,
   YT_ENDED,
   YT_PAUSED,
+  YT_PLAYING,
 } from '@/lib/backgroundPlayback'
 
 const PSEUDO_FULLSCREEN_STYLE: React.CSSProperties = {
@@ -47,6 +49,7 @@ export function GlobalPlayer() {
     videoTitle,
     titleLoading,
     playNext,
+    getNextVideoId,
     hasStarted,
     playerSlotRef,
     homeSlotReady,
@@ -258,14 +261,19 @@ export function GlobalPlayer() {
 
   const handleVideoEnd = useCallback(() => {
     if (endHandledRef.current) return
+    if (!getNextVideoId()) return
+
     endHandledRef.current = true
+    userPausedRef.current = false
     persistProgress()
     playNext()
-  }, [persistProgress, playNext])
+  }, [getNextVideoId, persistProgress, playNext])
 
   const ensurePlaying = useCallback((player: YtPlayerApi) => {
     if (userPausedRef.current) return
     try {
+      const state = player.getPlayerState?.()
+      if (state === YT_PLAYING || state === YT_BUFFERING) return
       player.playVideo?.()
     } catch {
       // iframe not ready
@@ -274,8 +282,40 @@ export function GlobalPlayer() {
 
   useEffect(() => {
     if (!ytPlayer || !videoId) return
-    ensurePlaying(ytPlayer)
+
+    let cancelled = false
+    let attempts = 0
+
+    const tryAutoplay = () => {
+      if (cancelled || attempts >= 30 || userPausedRef.current) return
+      attempts += 1
+      ensurePlaying(ytPlayer)
+      const state = ytPlayer.getPlayerState?.()
+      if (state === YT_PLAYING || state === YT_BUFFERING) return
+      window.setTimeout(tryAutoplay, 400)
+    }
+
+    tryAutoplay()
+    return () => {
+      cancelled = true
+    }
   }, [videoId, ytPlayer, ensurePlaying])
+
+  useEffect(() => {
+    if (!hasStarted || !ytPlayer) return
+
+    const interval = window.setInterval(() => {
+      if (userPausedRef.current || endHandledRef.current) return
+      try {
+        const state = ytPlayer.getPlayerState?.()
+        if (state === YT_ENDED) handleVideoEnd()
+      } catch {
+        // player not ready
+      }
+    }, 1000)
+
+    return () => window.clearInterval(interval)
+  }, [hasStarted, ytPlayer, handleVideoEnd])
 
   useEffect(() => {
     if (!hasStarted || !videoId) {
@@ -335,6 +375,7 @@ export function GlobalPlayer() {
       >
         {shouldRenderPlayer ? (
           <YouTube
+            key={videoId}
             className="w-full h-full"
             videoId={videoId}
             opts={{
