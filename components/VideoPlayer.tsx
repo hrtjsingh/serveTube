@@ -249,12 +249,31 @@ export default function VideoPlayer() {
   }, [isSignedIn, activePlaylistId, isSyncing, dbPlaylists, showToast])
 
   // ── Add / remove songs ───────────────────────────────────────────────────
-  const addToList = () => {
-    if (activeList.find((v: any) => v.id === videoId)) { showToast('Already in playlist', 'info'); return }
-    const updated = [...activeList, { id: videoId }]
+  const resolveVideoId = (input: string): string | null => {
+    const id = extractVideoId(input.trim())
+    if (!id) {
+      showToast(
+        isYouTubeMusicUrl(input.trim())
+          ? 'Use a YouTube Music song link (watch?v=…), not album/artist browse pages'
+          : 'Invalid YouTube / YouTube Music URL or video ID',
+        'error'
+      )
+      return null
+    }
+    return id
+  }
+
+  const addToList = (id?: string) => {
+    const songId = id ?? videoId
+    if (!songId) return
+    if (activeList.find((v: { id: string }) => v.id === songId)) {
+      showToast('Already in playlist', 'info')
+      return
+    }
+    const updated = [...activeList, { id: songId }]
     setActiveList(updated)
     if (isSignedIn && activePlaylistId) {
-      axios.post(`/api/playlists/${activePlaylistId}/add-song`, { id: videoId })
+      axios.post(`/api/playlists/${activePlaylistId}/add-song`, { id: songId })
         .then(r => {
           setDbPlaylists(ps => ps.map(p => p._id === activePlaylistId ? r.data.playlist : p))
           setIsDirty(false); setLastSynced(Date.now())
@@ -307,18 +326,26 @@ export default function VideoPlayer() {
   // ── Video controls ────────────────────────────────────────────────────────
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const id = extractVideoId(videoURL.trim())
-    if (!id) {
-      showToast(
-        isYouTubeMusicUrl(videoURL.trim())
-          ? 'Use a YouTube Music song link (watch?v=…), not album/artist browse pages'
-          : 'Invalid YouTube / YouTube Music URL or video ID',
-        'error'
-      )
-      return
-    }
+    const id = resolveVideoId(videoURL)
+    if (!id) return
     setVideoId(id); setVideoURL('')
   }
+
+  const handleAddFromUrl = () => {
+    const id = resolveVideoId(videoURL)
+    if (!id) return
+    addToList(id)
+    setVideoURL('')
+  }
+
+  const pastedVideoId = useMemo(() => {
+    const trimmed = videoURL.trim()
+    return trimmed ? extractVideoId(trimmed) : null
+  }, [videoURL])
+
+  const pastedAlreadyInList = pastedVideoId
+    ? activeList.some((v: { id: string }) => v.id === pastedVideoId)
+    : false
 
   const changeVideo = (id: string) => setVideoId(id)
 
@@ -397,9 +424,20 @@ export default function VideoPlayer() {
           <Input type="text" placeholder="Paste YouTube or YouTube Music link / video ID…" value={videoURL}
             onChange={e => setVideoURL(e.target.value)} />
         </div>
-        <Button type="submit" variant="brand" disabled={!videoURL.trim()} className="w-full whitespace-nowrap sm:w-auto">
-          <Play size={14} /> Play Video
-        </Button>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <Button type="submit" variant="brand" disabled={!videoURL.trim()} className="w-full whitespace-nowrap sm:w-auto">
+            <Play size={14} /> Play Video
+          </Button>
+          <Button
+            type="button"
+            variant="success"
+            disabled={!videoURL.trim() || pastedAlreadyInList}
+            onClick={handleAddFromUrl}
+            className="w-full whitespace-nowrap sm:w-auto"
+          >
+            <Plus size={14} /> {pastedAlreadyInList ? 'In Playlist' : 'Add to Playlist'}
+          </Button>
+        </div>
       </form>
 
       {/* ── Mobile tabs ── */}
@@ -476,7 +514,7 @@ export default function VideoPlayer() {
                 <Button variant="outline" size="sm" onClick={playNext} disabled={activeList.length < 2}>
                   <SkipForward size={13} /> Next
                 </Button>
-                <Button variant="success" size="sm" onClick={alreadyInList ? undefined : addToList} disabled={alreadyInList}>
+                <Button variant="success" size="sm" onClick={() => addToList()} disabled={alreadyInList}>
                   <Plus size={13} /> {alreadyInList ? 'In Playlist' : 'Add to Playlist'}
                 </Button>
               </div>
