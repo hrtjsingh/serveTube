@@ -837,7 +837,30 @@ main { animation: fadeUp 0.4s ease; }
 }
 
 .st-sidebar-panel {
-  @apply flex w-full flex-shrink-0 flex-col gap-3 lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:w-[360px] lg:self-start lg:overflow-y-auto xl:w-[400px];
+  @apply flex w-full min-h-0 flex-shrink-0 flex-col gap-3 overflow-y-auto overscroll-y-contain;
+  max-height: min(calc(100dvh - 11rem), 100%);
+}
+
+@media (min-width: 1024px) {
+  .st-sidebar-panel {
+    @apply sticky top-28 w-[360px] self-start xl:w-[400px];
+    max-height: calc(100vh - 8rem);
+  }
+}
+
+.st-playlist-scroll {
+  @apply max-h-[min(280px,45dvh)] overflow-y-auto overscroll-y-contain pr-0.5;
+}
+
+.st-queue-scroll {
+  @apply min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain scroll-smooth p-2;
+  max-height: min(520px, calc(100dvh - 16rem));
+}
+
+@media (min-width: 1024px) {
+  .st-queue-scroll {
+    max-height: min(480px, calc(100vh - 22rem));
+  }
 }
 
 .st-section {

@@ -466,7 +466,7 @@ export default function VideoPlayer() {
       </div>
 
       {/* ── Player + Sidebar ── */}
-      <div className="video-player-layout flex flex-col gap-4 lg:flex-row">
+      <div className="video-player-layout flex min-h-0 flex-col gap-4 lg:flex-row lg:items-start">
 
         {/* Player column */}
         <div className={cn('min-w-0 flex-1 space-y-4', mobileTab !== 'watch' && 'hidden lg:block')}>
@@ -583,7 +583,7 @@ export default function VideoPlayer() {
                     <Plus size={12} /> New
                   </button>
                 </div>
-                <div className="space-y-1">
+                <div className="st-playlist-scroll space-y-1">
                   {localPlaylists.map(p => (
                     <div key={p._id}
                       onClick={() => setActiveLocalId(p._id)}
@@ -644,8 +644,8 @@ export default function VideoPlayer() {
 
             {/* ── Song queue for active playlist ── */}
             {activeList.length > 0 && (
-              <div className="st-card overflow-hidden shadow-sm">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <div className="st-card flex min-h-0 flex-col overflow-hidden shadow-sm">
+                <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
                   <div className="flex items-center gap-2">
                     <ListVideo size={15} className="text-brand" />
                     <span className="text-sm font-bold">Queue</span>
