@@ -364,7 +364,7 @@ export function PlaylistManager({
           </button>
         </div>
       ) : (
-        <div className="space-y-1.5">
+        <div className="st-playlist-scroll space-y-1.5">
           {playlists.map(p => {
             const active = p._id === activeId
             return (
